@@ -297,7 +297,8 @@ func multiplyByScalar<Digit>(_ a: Digit, _ b: [Digit]) -> [Digit] where Digit: U
         // product of the a and b
 }
 
-/// Shifts the digits of a number by N positions to the right, i.e multiplying the number by base^N
+/// Shifts the digits of a number by N positions to the right, i.e multiplying the number by base^N and truncating
+/// at the size of the number.
 ///
 /// - **Requires**:
 ///   - a: multiple-digit base-Digit number, 0-index is the lowest significant digit.
@@ -368,5 +369,14 @@ func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: Unsigne
         // multiply each digit of a by b while shifting the result to a higher digit (multiplying by base)
         // and sum all such products
 
-    []
+    var p = [Digit](repeating: 0, count: a.count * 2)
+
+    for i in (0..<a.count) {
+        let l = multiplyByScalar(a[i], b)
+        let m = padRight(l, p.count)
+        let r = shiftRight(m, i)
+        p = add(p, r).result
+    }
+
+    return p
 }
