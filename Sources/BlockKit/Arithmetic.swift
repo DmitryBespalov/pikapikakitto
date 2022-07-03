@@ -28,7 +28,7 @@ import Foundation
 ///   - b: second number to add
 /// - Returns: if no overflow, then sum of the a and b and 0. Otherwise, the truncated sum and 1
 ///
-func sum<Digit>(_ a: [Digit], _ b: [Digit]) -> (result: [Digit], overflow: Digit) where Digit: UnsignedInteger & FixedWidthInteger {
+func add<Digit>(_ a: [Digit], _ b: [Digit]) -> (result: [Digit], overflow: Digit) where Digit: UnsignedInteger & FixedWidthInteger {
     // add two numbers digit by digit with carrying over the overflow to the next digit.
 
     // resulting sum
@@ -49,7 +49,7 @@ func sum<Digit>(_ a: [Digit], _ b: [Digit]) -> (result: [Digit], overflow: Digit
     for i in (0..<a.count) {
 
         // (I) sum of first term and carry from the previous digit
-        (v, c_a) = sumScalars(a[i], c)
+        (v, c_a) = addScalars(a[i], c)
         // c == 0
             // (1): a[i] + 0 = a[i]; v <- a[i]; c_a <- 0
         // c == 1
@@ -63,7 +63,7 @@ func sum<Digit>(_ a: [Digit], _ b: [Digit]) -> (result: [Digit], overflow: Digit
         // otherwise, c_a == 0 and v <= max
 
         // (II) sum of the previous sum and the second term
-        (s[i], c_b) = sumScalars(v, b[i])
+        (s[i], c_b) = addScalars(v, b[i])
             // (1): v == 0 and c_a == 1
                 // s[i] <- b[i]; c_b <- 0
             // (2): v <= max and c_a == 0
@@ -105,7 +105,7 @@ func sum<Digit>(_ a: [Digit], _ b: [Digit]) -> (result: [Digit], overflow: Digit
 ///   - b: the other term to add
 /// - Returns: if sum overflows, then returns partial sum: (a + b) % base as a result and 1 for an overflow indication
 /// if sum does not overflow, then returns it in the result, and 0 for no overflow indication.
-func sumScalars<Digit>(_ a: Digit, _ b: Digit) -> (result: Digit, overflow: Digit) where Digit: UnsignedInteger & FixedWidthInteger {
+func addScalars<Digit>(_ a: Digit, _ b: Digit) -> (result: Digit, overflow: Digit) where Digit: UnsignedInteger & FixedWidthInteger {
     // before: n/a
     let result: (partialValue: Digit, overflow: Bool) = a.addingReportingOverflow(b)
     // after:
@@ -218,4 +218,155 @@ func subtractScalars<Digit>(_ a: Digit, _ b: Digit) -> (result: Digit, overflow:
     return (result.partialValue, result.overflow ? 1 : 0)
         // overflow == true: result is truncated value of a - b; 'overflow' <- 1
         // overflow == false: result is difference between a and b; 'overflow' <- 0
+}
+
+/// Multiplies one scalar by another, producing a 2-digit product
+///
+/// - **Requires**:
+///   - a, b: unsigned fixed width integers
+/// - **Guarantees**:
+///   - result is the full product of a and b, as a 2-digit number
+///
+/// - Parameters:
+///   - a: first term
+///   - b: multiplier
+/// - Returns: product of a and b
+func multiplyScalars<Digit>(_ a: Digit, _ b: Digit) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
+    let result = a.multipliedFullWidth(by: b)
+        // .low is the lower part of the full width result
+        // .high is the higher part of the full width result
+    return [Digit(result.low), result.high]
+        // index 0 is lower part
+        // index 1 is higher part
+}
+
+
+/// Multiplies scalar with number (vector) full width, producing a longer-digit number.
+///
+/// - **Requires**:
+///   - a: unsigned fixed width binary integer
+///   - b: multiple-digit number represetned by array of coefficients, with the 0-index being lowest significant
+///     coefficient
+///  - **Guarantees**:
+///    - result.count == b.count + 1
+///    - result is the product of the multiplying a by b
+///
+/// - Parameters:
+///   - a: scalar multiplier
+///   - b: number in base-Digit
+/// - Returns: product of multiplicating number by scalar, full width.
+func multiplyByScalar<Digit>(_ a: Digit, _ b: [Digit]) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
+    var p = [Digit](repeating: 0, count: b.count + 1)
+        // p.count == b.count + 1
+        // p[i] == 0
+
+    var c: Digit = 0
+        // c == 0
+
+    // 0 <= c <= max
+    for i in (0..<b.count) {
+        // i.
+        let s = multiplyScalars(a, b[i])
+            // s[0], s[1] are resulting digits
+                // 0 <= s[1] <= max - 1
+                    // consider two N-based digits. Maximum number is N - 1.
+                    // maximum multiplied scalars are ( N - 1 ) * ( N - 1 ) = N^2 - 2N +1 = N(N - 2) + 1 which is < N^2
+                    // thus, the higher-order digit will N - 2 which is max - 1.
+        // ii.
+        let q = add(s, [c, 0]).result
+            // [s[0], s[1]] + [c, 0]
+                // (s[0] + c) may result in overflow into next digit.
+                // overflow == 1
+                    // q[1] <- s[1] + 1
+                    // since s[1] <= max - 1, then s[1] + 1 <= max, then q[1] <= max
+                    // thus, add()'s overflow is always 0 and disregarded. We use .result instead.
+
+        // iii.
+        (p[i], c) = (q[0], q[1])
+            // p[i] <- q[0], i.e. the digit of the result after multiplying two digits and adding carry-over from
+                // previous digit.
+            // c <- q[1]; c <= max
+                // carry over to the next digit
+    }
+    // all digits corresponding to `b` traversed.
+
+    // record carry over as an extra digit.
+    p[b.count] = c
+
+    return p
+        // product of the a and b
+}
+
+/// Shifts the digits of a number by N positions to the right, i.e multiplying the number by base^N
+///
+/// - **Requires**:
+///   - a: multiple-digit base-Digit number, 0-index is the lowest significant digit.
+///   - `n < a.count`
+/// - **Guarantees**:
+///   - result.count == a.count
+///   - `result[0..<n] == 0`
+///   - `result[n..<a.count] == a[0..<(a.count - n)]
+///
+/// - Parameters:
+///   - a: number to shift
+///   - n: how much to shift
+/// - Returns: resulting number
+func shiftRight<Digit>(_ a: [Digit], _ n: Int) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
+    var result = a
+        // result.count == a.count
+    result[0..<n] = ArraySlice(repeating: 0, count: n)
+        // result[0..<n] == 0
+    result[n..<a.count] = a[0..<( a.count - n )]
+        // result[n..<a.count] == a[0..<(a.count - n)]
+            // count(left) = a.count - n
+            // count(right) = a.count - n - 0
+    return result
+}
+
+/// Extends the width of the number to a new size by adding zeroes to the higher-significant end till the required width.
+///
+/// - **Requires**:
+///   - a: multple-digit base-Digit number, 0-index is the lowest significant digit.
+/// - **Guarantees**:
+///   - if `size > a.count` then `result[a.count..<size] == 0 && result[0..<a.count] == a[0..<a.count]`
+///   - else `result == a`
+///
+/// - Parameters:
+///   - a: number to pad
+///   - size: new size
+/// - Returns: padded number
+func padRight<Digit>(_ a: [Digit], _ size: Int) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
+    guard size > a.count else {
+        return a
+            // result == a iff !(size > a.count)
+    }
+    let padding = [Digit](repeating: 0, count: size - a.count)
+        // padding.count == size - a.count
+        // padding[i] == 0
+    let result = a + padding
+        // result[0..<a.count] == a && result[a.count..<size] == 0
+    return result
+}
+
+/// Multiplies two numbers together, full-width.
+///
+/// - **Requires**:
+///   - a, b: multiple-digit base-Digit numbers represented by coefficients with 0-index as lowest significant digit.
+///     Digits are unsigned fixed width binary integers.
+///   - a.count == b.count
+/// - **Guarantees**:
+///   - `result.count == a.count * 2`
+///   - result is the product of multiplying a and b.
+///
+///
+/// - Parameters:
+///   - a: multiplicand
+///   - b: multiplier
+/// - Returns: full-width product of multiplying a by b
+func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
+    // long multiplication, multiplying two polynomes.
+        // multiply each digit of a by b while shifting the result to a higher digit (multiplying by base)
+        // and sum all such products
+
+    []
 }

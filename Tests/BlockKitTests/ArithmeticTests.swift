@@ -14,19 +14,19 @@ class ArithmeticTests: XCTestCase {
     // MARK: addition
 
     func test_sumDigits_overflow_1() throws {
-        let (s, c) = sumScalars(Digit(255), Digit(1))
+        let (s, c) = addScalars(Digit(255), Digit(1))
         XCTAssertEqual(s, 0, "invalid sum")
         XCTAssertEqual(c, 1, "expected overflow")
     }
 
     func test_sumDigits_overflow_2() throws {
-        let (s, c) = sumScalars(Digit(255), Digit(2))
+        let (s, c) = addScalars(Digit(255), Digit(2))
         XCTAssertEqual(s, 1, "invalid sum")
         XCTAssertEqual(c, 1, "expected overflow")
     }
 
     func test_sumDigits_noOverflow() {
-        let (s, c) = sumScalars(Digit(254), Digit(1))
+        let (s, c) = addScalars(Digit(254), Digit(1))
         XCTAssertEqual(s, 255, "invalid sum")
         XCTAssertEqual(c, 0, "not expected overflow")
     }
@@ -36,7 +36,7 @@ class ArithmeticTests: XCTestCase {
         let b: [Digit] = [3, 0] // 3
         let c: [Digit] = [3, 1] // 259, no overflow
 
-        let (s, o) = sum(a, b)
+        let (s, o) = add(a, b)
 
         XCTAssertEqual(s, c, "invalid sum")
         XCTAssertEqual(o, 0, "not expected overflow")
@@ -47,7 +47,7 @@ class ArithmeticTests: XCTestCase {
         let b: [Digit] = [1, 0] // 1
         let c: [Digit] = [0, 0] // overflow!
 
-        let (s, o) = sum(a, b)
+        let (s, o) = add(a, b)
 
         XCTAssertEqual(s, c, "invlaid sum")
         XCTAssertEqual(o, 1, "expected to overflow")
@@ -58,7 +58,7 @@ class ArithmeticTests: XCTestCase {
         let b: [Digit] = [2, 0] // 2
         let c: [Digit] = [1, 0] // overflow!
 
-        let (s, o) = sum(a, b)
+        let (s, o) = add(a, b)
 
         XCTAssertEqual(s, c, "invlaid sum")
         XCTAssertEqual(o, 1, "expected to overflow")
@@ -69,7 +69,7 @@ class ArithmeticTests: XCTestCase {
         let b: [Digit] = [255, 255] // 65.535
         let c: [Digit] = [2, 2] // 514
 
-        let (s, o) = sum(a, b)
+        let (s, o) = add(a, b)
 
         XCTAssertEqual(s, c, "invlaid sum")
         XCTAssertEqual(o, 1, "expected to overflow")
@@ -80,7 +80,7 @@ class ArithmeticTests: XCTestCase {
         let b: [Digit] = [1, 0] // 1
         let c: [Digit] = [0, 1] // 255
 
-        let (s, o) = sum(a, b)
+        let (s, o) = add(a, b)
 
         XCTAssertEqual(s, c, "invalid sum")
         XCTAssertEqual(o, 0, "not expected overflow")
@@ -91,7 +91,7 @@ class ArithmeticTests: XCTestCase {
         let b: [Digit] = [1, 0, 0] // 1
         let c: [Digit] = [0, 0, 1] // 65.536
 
-        let (s, o) = sum(a, b)
+        let (s, o) = add(a, b)
 
         XCTAssertEqual(s, c, "invalid sum")
         XCTAssertEqual(o, 0, "not expected overflow")
@@ -160,7 +160,7 @@ class ArithmeticRandomizedTests: XCTestCase {
                 .random(in: 0...UInt8.max)
             ]
 
-            let c = sum(a, b)
+            let c = add(a, b)
 
             let c16 = to_16(a).addingReportingOverflow(to_16(b))
 
