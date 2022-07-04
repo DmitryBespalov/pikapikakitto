@@ -10,18 +10,19 @@ import Foundation
 /// Adds two numbers detecting overflow
 ///
 /// - **Requires**:
-///   - a, b: number represented as an array of digits. Each digit is a Base-N generic unsigned fixed width binary integer. First item is the lowest significant digit.
+///   - `a, b`: numbers represented as an array of digits. Each digit is a
+///     Base-N generic unsigned fixed width binary integer. First item is the lowest significant digit.
 ///
 ///     For example, given a UInt8 as a base digit type (base-256 numbers),
 ///     the 3-digit array would represent a number:
 ///     ```
 ///     a[0] + a[1] * 2^8 + a[2] * 2^16
 ///     ```
-///   - a.count == b.count, i.e. both numbers have same number of digits.
+///   - `a.count == b.count`, i.e. both numbers have same number of digits.
 /// - **Guarantees**:
-///   - result.count == a.count, i.e. result is the same size as operands
-///   - if overflow occurs, then result is the truncated sum (a + b) % max number, and 1 to indicate overflow
-///   - if no overflow occurs, then result is the sum of a and b, and 0 for no overflow indication.
+///   - `result.count == a.count`, i.e. result is the same size as operands
+///   - if overflow occurs, then result is the truncated sum `(a + b) % max number`, and `1` to indicate overflow
+///   - if no overflow occurs, then result is the `sum of a and b`, and `0` for no overflow indication.
 ///
 /// - Parameters:
 ///   - a: first number to add
@@ -95,16 +96,16 @@ func add<Digit>(_ a: [Digit], _ b: [Digit]) -> (result: [Digit], overflow: Digit
 /// Sum of 2 fixed-width digits that can overflow
 ///
 /// - **Requires**:
-///   - a and b to be unsigned fixed width integers
+///   - `a` and `b` to be unsigned fixed width integers
 /// - **Guarantees**:
-///   - if sum of a and b overflows then returns (truncated sum, 1)
-///   - otherwise returns (sum, 0)
+///   - if sum of a and b overflows then returns tuple `(truncated sum, 1)`
+///   - otherwise returns tuple `(sum of a and b, 0)`
 ///
 /// - Parameters:
 ///   - a: one term to add
 ///   - b: the other term to add
-/// - Returns: if sum overflows, then returns partial sum: (a + b) % base as a result and 1 for an overflow indication
-/// if sum does not overflow, then returns it in the result, and 0 for no overflow indication.
+/// - Returns: if sum overflows, then returns partial sum: `(a + b) % base` as a result and `1` for an overflow indication
+///   if sum does not overflow, then returns it in the result, and `0` for no overflow indication.
 func addScalars<Digit>(_ a: Digit, _ b: Digit) -> (result: Digit, overflow: Digit) where Digit: UnsignedInteger & FixedWidthInteger {
     // before: n/a
     let result: (partialValue: Digit, overflow: Bool) = a.addingReportingOverflow(b)
@@ -131,18 +132,18 @@ func addScalars<Digit>(_ a: Digit, _ b: Digit) -> (result: Digit, overflow: Digi
 ///  The array starts with the lowest significant coefficient.
 ///
 ///  - **Requires**:
-///     - a.count == b.count
-///     - a, b: representation of a base-Digit number's polynomial coefficients
+///     - `a.count == b.count`
+///     - `a, b`: representation of a base-Digit number's polynomial coefficients
 ///       with the lowest significant coefficient as a first item (first digit)
 ///  - **Guarantees**:
-///    - result.count == a.count
-///    - if a > b, then overflow == 1 && result = (a - b) % max number
-///    - else, overflow == 0, result = a - b
+///    - `result.count == a.count`
+///    - if `a > b`, then `overflow == 1 && result == (a - b) % max number`
+///    - else, `overflow == 0`, `result == a - b`
 ///
 /// - Parameters:
 ///   - a: first number, base-Digit. Represents coefficients to the base-digit number representation.
 ///   - b: number to subtract from the first one.
-/// - Returns: truncated difference, and 1 if overflow, or 0 if no overflow.
+/// - Returns: truncated difference, and `1` if overflow, or `0` if no overflow.
 func subtract<Digit>(_ a: [Digit], _ b: [Digit]) -> (result: [Digit], overflow: Digit) where Digit: UnsignedInteger & FixedWidthInteger {
     assert(a.count == b.count)
     // difference
@@ -204,10 +205,10 @@ func subtract<Digit>(_ a: [Digit], _ b: [Digit]) -> (result: [Digit], overflow: 
 /// Subtracts one scalar from another, can overflow.
 ///
 /// - **Requires**:
-///   - a and b unsigned fixed width binary integers
+///   - `a` and `b` unsigned fixed width binary integers
 /// - **Guarantees**:
-///   - if a >= b: result = a - b && overflow == 0
-///   - else: result = (a - b) % base && overflow == 1
+///   - if `a >= b`: `result == a - b && overflow == 0`
+///   - else: `result == (a - b) % base && overflow == 1`
 ///
 /// - Parameters:
 ///   - a: first term
@@ -223,7 +224,7 @@ func subtractScalars<Digit>(_ a: Digit, _ b: Digit) -> (result: Digit, overflow:
 /// Multiplies one scalar by another, producing a 2-digit product
 ///
 /// - **Requires**:
-///   - a, b: unsigned fixed width integers
+///   - `a, b`: unsigned fixed width integers
 /// - **Guarantees**:
 ///   - result is the full product of a and b, as a 2-digit number
 ///
@@ -241,14 +242,14 @@ func multiplyScalars<Digit>(_ a: Digit, _ b: Digit) -> [Digit] where Digit: Unsi
 }
 
 
-/// Multiplies scalar with number (vector) full width, producing a longer-digit number.
+/// Multiplies scalar with a number (vector) full width, producing a longer-digit number.
 ///
 /// - **Requires**:
 ///   - a: unsigned fixed width binary integer
 ///   - b: multiple-digit number represetned by array of coefficients, with the 0-index being lowest significant
 ///     coefficient
 ///  - **Guarantees**:
-///    - result.count == b.count + 1
+///    - `result.count == b.count + 1`
 ///    - result is the product of the multiplying a by b
 ///
 /// - Parameters:
@@ -297,16 +298,16 @@ func multiplyByScalar<Digit>(_ a: Digit, _ b: [Digit]) -> [Digit] where Digit: U
         // product of the a and b
 }
 
-/// Shifts the digits of a number by N positions to the right, i.e multiplying the number by base^N and truncating
+/// Shifts the digits of a number by `N` positions to the right, i.e multiplying the number by base^N and truncating
 /// at the size of the number.
 ///
 /// - **Requires**:
-///   - a: multiple-digit base-Digit number, 0-index is the lowest significant digit.
+///   - `a`: multiple-digit base-Digit number, 0-index is the lowest significant digit.
 ///   - `n < a.count`
 /// - **Guarantees**:
-///   - result.count == a.count
+///   - `result.count == a.count`
 ///   - `result[0..<n] == 0`
-///   - `result[n..<a.count] == a[0..<(a.count - n)]
+///   - `result[n..<a.count] == a[0..<(a.count - n)]`
 ///
 /// - Parameters:
 ///   - a: number to shift
@@ -327,7 +328,7 @@ func shiftRight<Digit>(_ a: [Digit], _ n: Int) -> [Digit] where Digit: UnsignedI
 /// Extends the width of the number to a new size by adding zeroes to the higher-significant end till the required width.
 ///
 /// - **Requires**:
-///   - a: multple-digit base-Digit number, 0-index is the lowest significant digit.
+///   - `a`: multple-digit base-Digit number, 0-index is the lowest significant digit.
 /// - **Guarantees**:
 ///   - if `size > a.count` then `result.count == size && result[a.count..<size] == 0 && result[0..<a.count] == a[0..<a.count]`
 ///   - else `result == a`
@@ -353,18 +354,18 @@ func padRight<Digit>(_ a: [Digit], _ size: Int) -> [Digit] where Digit: Unsigned
 /// Multiplies two numbers together, full-width.
 ///
 /// - **Requires**:
-///   - a, b: multiple-digit base-Digit numbers represented by coefficients with 0-index as lowest significant digit.
+///   - `a, b`: multiple-digit base-Digit numbers represented by coefficients with 0-index as lowest significant digit.
 ///     Digits are unsigned fixed width binary integers.
-///   - a.count == b.count
+///   - `a.count == b.count`
 /// - **Guarantees**:
 ///   - `result.count == a.count * 2`
-///   - result is the product of multiplying a and b.
+///   - result is the product of multiplying `a` and `b`.
 ///
 ///
 /// - Parameters:
 ///   - a: multiplicand
 ///   - b: multiplier
-/// - Returns: full-width product of multiplying a by b
+/// - Returns: full-width product of multiplying `a` by `b`
 func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
     // long multiplication, or multiplying two polynomes.
         // multiply each digit of a by b while shifting the result to a higher digit (multiplying by base)
