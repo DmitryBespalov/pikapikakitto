@@ -329,7 +329,7 @@ func shiftRight<Digit>(_ a: [Digit], _ n: Int) -> [Digit] where Digit: UnsignedI
 /// - **Requires**:
 ///   - a: multple-digit base-Digit number, 0-index is the lowest significant digit.
 /// - **Guarantees**:
-///   - if `size > a.count` then `result[a.count..<size] == 0 && result[0..<a.count] == a[0..<a.count]`
+///   - if `size > a.count` then `result.count == size && result[a.count..<size] == 0 && result[0..<a.count] == a[0..<a.count]`
 ///   - else `result == a`
 ///
 /// - Parameters:
@@ -346,6 +346,7 @@ func padRight<Digit>(_ a: [Digit], _ size: Int) -> [Digit] where Digit: Unsigned
         // padding[i] == 0
     let result = a + padding
         // result[0..<a.count] == a && result[a.count..<size] == 0
+        // result.count == a.count + padding.count == a.count + size - a.count == size
     return result
 }
 
@@ -365,18 +366,89 @@ func padRight<Digit>(_ a: [Digit], _ size: Int) -> [Digit] where Digit: Unsigned
 ///   - b: multiplier
 /// - Returns: full-width product of multiplying a by b
 func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
-    // long multiplication, multiplying two polynomes.
+    // long multiplication, or multiplying two polynomes.
         // multiply each digit of a by b while shifting the result to a higher digit (multiplying by base)
         // and sum all such products
+        //
+        // or, if each number is a polynome, then we take each term of one polynome and multiply by another
+        // polynome and then sum all such products to get the result.
+
+    // (*): the strict upper bound on the resulting product is the greatest number in double digit length.
+        // the greatest D-digit number M in base X is X^D - 1 where D > 0 and X > 1
+            // maximum digit in base X has value X - 1.
+            // for 1-digit, M(1) = X - 1   (1)
+            // if we assume that for (N - 1) digits true: M(N-1) = X^(N - 1) - 1
+            // then, N-digit maximum number is M(N) = M(N - 1) + (X - 1) X^(N - 1)
+            // i.e. is the maximum N-1 digit number with the maximum exponent for next digit
+            // so M(N) = X^(N - 1) - 1 + (X - 1) X^(N - 1) = X^(N - 1) + X^N - X^(N - 1) = X^N - 1.
+            // prooving by induction, the proposition holds.
+
+        // the greatest product of 2 such numbers is (X^D - 1)(X^D - 1) = X^2D - 2X^D + 1 and it is true that:
+        // (1): X^2D - 2X^D + 1 < X^2D - 1
+            // Proof by contradiction. Assume that the opposite is true, i.e.
+            // (2): X^2D - 2X^D + 1 >= X^2D - 1, then
+            // -2X^D + 1 >= -1  ==>  -2X^D >= -2  ==>  X^D <= 1 iff X^D = 1 OR X^D < 1
+            // X^D = 1 iff D = 0 OR X = 1, i.e. number has no digits or it is in the base-1.
+                // for our practical purposes, this will not be the case, so we can actually set it as a requirement.
+                // so it is not true.
+            // X^D < 1 iff X < 1, which is not true according to our requirements.
+            // so, we supposed that (2) is true but arrived at contradiction, so we conclude that it is false
+            // and it follows that (1) is true instead.
+
+        // Because X^2D - 1 is the greatest 2D-digit number in base X, we conclude that the product of
+        // two greatest D-digit numbers is less than the greatest 2D-digit numbers, and thus will always
+        // have 2D-digits and will never exceed that bound (overflow).
+
+        // that is why we need double-digit width for the result of the product.
 
     var p = [Digit](repeating: 0, count: a.count * 2)
 
     for i in (0..<a.count) {
+        // take i-th coefficient from a and multiply it by the polynome b
         let l = multiplyByScalar(a[i], b)
+            // a[i] is an unsigned fixed width binary integer
+            // b is a number with multiple digits
+            // requirements are fulfilled, so it is guaranteed that:
+            // l is a number equal to product of multiplying a[i] by b
+            // l.count == b.count + 1
+
+
+        // extend the result to be double-digit size, so that resulting product sum can be performed.
         let m = padRight(l, p.count)
+            // l is a multi-digit number AND
+            // l.count == b.count + 1 AND
+            // p.count == a.count * 2 AND
+            // a.count == b.count AND
+            // i.e. p.count == b.count * 2 which is greater than b.count + 1
+            // thus it is guaranteed that
+            // m[0..<l.count] == l[0..<l.count] and m[l.count..<p.count] == 0 and m.count == p.count
+
+        // multiply by the base raised to the exponent for the coefficient, i.e. the "i" is the exponent
+        // that is equivalent to "shifting" the number to the right for "i" positions.
+        // we will never lose the numbers because the width is double-digit
         let r = shiftRight(m, i)
+            // m is a multiple-digit number
+            // i < m.count
+                // true because max(i) == a.count - 1 and m.count == p.count == a.count * 2
+                // so, a.count * 2 > a.count - 1 and so m.count > i for all i in the loop.
+            // thus it is guaranteed that
+            // r.count == m.count and
+            // r[0..<i] == 0 && r[i..<m.count] == m[0..<(m.count - i)]
+            // so the product is shifted by i positions to the right.
+
+        // add the product to the accumulated sum.
+        // the product will never overflow the 2-digit size (see proposition (*) above),
+        // so we ignore the "overflow"/carry of the sum
         p = add(p, r).result
-    }
+            // r.count == m.count == p.count and
+            // p and r are multiple-digit numbers
+            // and no overflow can occur,
+            // so, it is guaranteed that
+            // add().result is the sum of p and r and add().overflow is 0 if no overflow occurred
+            // so resulting p is the result of sum p + r
+    } // end of the loop
+    // all digits of the first number multiplied by the number b and resulting product added together to number p
 
     return p
+        // return the p, a product of a and b.
 }
