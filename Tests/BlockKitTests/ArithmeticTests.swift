@@ -733,7 +733,7 @@ class ArithmeticTests: XCTestCase {
     // MARK: Subtraction
 
     func test_subtractScalars() {
-         util_generateTable_subtractScalars()
+         // util_generateTable_subtractScalars()
 
         let table: [[Digit]] =
         [
@@ -786,7 +786,7 @@ class ArithmeticTests: XCTestCase {
     }
 
     func test_subtract() {
-        util_generateTable_subtract()
+        // util_generateTable_subtract()
 
         let table: [[Digit]] =
         [
