@@ -24,9 +24,6 @@ class ArithmeticRandomizedTests: XCTestCase {
         // with the builtin sum result
 
         for operation in (0..<numberOfOperations) {
-            if operation % 100000 == 0 {
-                print(operation)
-            }
 
             let a: [UInt8] = [
                 .random(in: 0...UInt8.max),
@@ -42,8 +39,13 @@ class ArithmeticRandomizedTests: XCTestCase {
 
             let c16 = to_16(a).addingReportingOverflow(to_16(b))
 
-            XCTAssertEqual(to_16(c.result), c16.partialValue)
-            XCTAssertEqual(c.overflow, c16.overflow ? 1 : 0)
+
+            if operation % 100_000 == 0 {
+                print(operation * 100 / numberOfOperations, "%", a, b, c)
+            }
+
+            XCTAssertEqual(to_16(c.result), c16.partialValue, "\(a) + \(b) = \(c)")
+            XCTAssertEqual(c.overflow, c16.overflow ? 1 : 0, "\(a) + \(b) = \(c)")
         }
     }
 
@@ -56,10 +58,6 @@ class ArithmeticRandomizedTests: XCTestCase {
         // with the builtin subtraction result
 
         for operation in (0..<numberOfOperations) {
-            if operation % 100_000 == 0 {
-                print(operation)
-            }
-
             let a: [UInt8] = [
                 .random(in: 0...UInt8.max),
                 .random(in: 0...UInt8.max)
@@ -74,9 +72,12 @@ class ArithmeticRandomizedTests: XCTestCase {
 
             let c16 = to_16(a).subtractingReportingOverflow(to_16(b))
 
-            XCTAssertEqual(to_16(c.result), c16.partialValue)
-            XCTAssertEqual(c.overflow, c16.overflow ? 1 : 0)
+            if operation % 100_000 == 0 {
+                print(operation * 100 / numberOfOperations, "%", a, b, c)
+            }
+
+            XCTAssertEqual(to_16(c.result), c16.partialValue, "\(a) - \(b) = \(c)")
+            XCTAssertEqual(c.overflow, c16.overflow ? 1 : 0, "\(a) - \(b) = \(c)")
         }
     }
 }
-
