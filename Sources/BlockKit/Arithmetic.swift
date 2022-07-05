@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Arithmetic.swift
 //  
 //
 //  Created by Dmitry Bespalov on 03.07.22.
@@ -29,7 +29,7 @@ import Foundation
 ///   - b: second number to add
 /// - Returns: if no overflow, then sum of the a and b and 0. Otherwise, the truncated sum and 1
 ///
-func add<Digit>(_ a: [Digit], _ b: [Digit]) -> (result: [Digit], overflow: Digit) where Digit: UnsignedInteger & FixedWidthInteger {
+func sum<Digit>(_ a: [Digit], _ b: [Digit]) -> (result: [Digit], overflow: Digit) where Digit: UnsignedInteger & FixedWidthInteger {
     // add two numbers digit by digit with carrying over the overflow to the next digit.
 
     // resulting sum
@@ -274,7 +274,7 @@ func multiplyByScalar<Digit>(_ a: Digit, _ b: [Digit]) -> [Digit] where Digit: U
                     // maximum multiplied scalars are ( N - 1 ) * ( N - 1 ) = N^2 - 2N +1 = N(N - 2) + 1 which is < N^2
                     // thus, the higher-order digit will N - 2 which is max - 1.
         // ii.
-        let q = add(s, [c, 0]).result
+        let q = sum(s, [c, 0]).result
             // [s[0], s[1]] + [c, 0]
                 // (s[0] + c) may result in overflow into next digit.
                 // overflow == 1
@@ -440,7 +440,7 @@ func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: Unsigne
         // add the product to the accumulated sum.
         // the product will never overflow the 2-digit size (see proposition (*) above),
         // so we ignore the "overflow"/carry of the sum
-        p = add(p, r).result
+        p = sum(p, r).result
             // r.count == m.count == p.count and
             // p and r are multiple-digit numbers
             // and no overflow can occur,
@@ -452,4 +452,31 @@ func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: Unsigne
 
     return p
         // return the p, a product of a and b.
+}
+
+func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (quotient: [Digit], remainder: [Digit]) where Digit: UnsignedInteger & FixedWidthInteger {
+    // division is the inverse of multiplication
+        // division without remainder
+            // a / b = c is inverse of c * b = a
+            // thus, for b > 1
+            // a has 2D digits while c and b have D digits.
+            // for b == 1: c == a, i.e. a has 2D digits and c has 2D digits.
+                // what do we do? we have only D digits to fit,
+                // Swift standard library just truncates the result to D digits
+            // for b == 0: runtime error, division by zero, i.e. c can be anything
+        // division with remainder r > 0
+            // a / b = c + r / b where r < b, is inverse of a = c * b + r
+            // again, b != 0, otherwise it is division by 0 and is a runtime error
+            // b == 1 is impossible, remainder is always 0, because only 0 < 1
+            // so, the result is always D-digit long if the dividend is 2D - digit long, and so divisor is also
+            // D digits long.
+
+        // division is answering the question: which number multiplied by divisor and then added with which another
+        // number would be equal to the dividend? It is equivalent to finding coefficients of the
+        // number a in terms of linear combination by factor b:
+        // a / b = x + y / b (x is the quotient and y is the remainder)
+        // a = x * b^1 + y * b^0 = x * b + y
+
+
+    ([], [])
 }

@@ -24,5 +24,8 @@ let package = Package(
         .testTarget(
             name: "BlockKitTests",
             dependencies: ["BlockKit"]),
+        .testTarget(
+            name: "BlockKitSlowTests",
+            dependencies: ["BlockKit"])
     ]
 )

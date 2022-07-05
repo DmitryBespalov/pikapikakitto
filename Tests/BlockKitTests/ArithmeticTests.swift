@@ -36,7 +36,7 @@ class ArithmeticTests: XCTestCase {
         let b: [Digit] = [3, 0] // 3
         let c: [Digit] = [3, 1] // 259, no overflow
 
-        let (s, o) = add(a, b)
+        let (s, o) = sum(a, b)
 
         XCTAssertEqual(s, c, "invalid sum")
         XCTAssertEqual(o, 0, "not expected overflow")
@@ -47,7 +47,7 @@ class ArithmeticTests: XCTestCase {
         let b: [Digit] = [1, 0] // 1
         let c: [Digit] = [0, 0] // overflow!
 
-        let (s, o) = add(a, b)
+        let (s, o) = sum(a, b)
 
         XCTAssertEqual(s, c, "invlaid sum")
         XCTAssertEqual(o, 1, "expected to overflow")
@@ -58,7 +58,7 @@ class ArithmeticTests: XCTestCase {
         let b: [Digit] = [2, 0] // 2
         let c: [Digit] = [1, 0] // overflow!
 
-        let (s, o) = add(a, b)
+        let (s, o) = sum(a, b)
 
         XCTAssertEqual(s, c, "invlaid sum")
         XCTAssertEqual(o, 1, "expected to overflow")
@@ -69,7 +69,7 @@ class ArithmeticTests: XCTestCase {
         let b: [Digit] = [255, 255] // 65.535
         let c: [Digit] = [2, 2] // 514
 
-        let (s, o) = add(a, b)
+        let (s, o) = sum(a, b)
 
         XCTAssertEqual(s, c, "invlaid sum")
         XCTAssertEqual(o, 1, "expected to overflow")
@@ -80,7 +80,7 @@ class ArithmeticTests: XCTestCase {
         let b: [Digit] = [1, 0] // 1
         let c: [Digit] = [0, 1] // 255
 
-        let (s, o) = add(a, b)
+        let (s, o) = sum(a, b)
 
         XCTAssertEqual(s, c, "invalid sum")
         XCTAssertEqual(o, 0, "not expected overflow")
@@ -91,7 +91,7 @@ class ArithmeticTests: XCTestCase {
         let b: [Digit] = [1, 0, 0] // 1
         let c: [Digit] = [0, 0, 1] // 65.536
 
-        let (s, o) = add(a, b)
+        let (s, o) = sum(a, b)
 
         XCTAssertEqual(s, c, "invalid sum")
         XCTAssertEqual(o, 0, "not expected overflow")
@@ -120,86 +120,210 @@ class ArithmeticTests: XCTestCase {
     func test_subtract_2digit_overflow() {
         let a: [Digit] = [3, 2] // 515
         let b: [Digit] = [255, 255] // 65.535
-        let c: [Digit] = [2, 0] // 514
+        let c: [Digit] = [4, 2] // 514
 
         let (s, o) = subtract(a, b)
 
         XCTAssertEqual(s, c, "invlaid sum")
         XCTAssertEqual(o, 1, "expected to overflow")
     }
-}
 
-class ArithmeticRandomizedTests: XCTestCase {
-    // randomized test
-    func to_16(_ v: [UInt8]) -> UInt16 {
-        UInt16(v[0]) + UInt16(v[1]) * 256
-    }
+    func test_multiplyScalars() {
+        let table: [[Digit]] = [
+        //  [a,     b,     c[0],   c[1]
+            [0,     0,      0,      0],
+            [0,     1,      0,      0],
+            [0,     128,    0,      0],
+            [0,     254,    0,      0],
+            [0,     255,    0,      0],
 
-    func test_sum_randomized() {
-        continueAfterFailure = false
+            [1,     0,      0,      0],
+            [1,     1,      1,      0],
+            [1,     128,  128,      0],
+            [1,     254,  254,      0],
+            [1,     255,  255,      0],
 
-        // test sum algorithm using digits of
-        // smaller size and convert the sum
-        // to a bigger bit width to compare
-        // with the builtin sum result
+            [128,   0,      0,      0],
+            [128,   1,     128,     0],
+            [128,   128,    0,     64],
+            [128,   254,    0,    127],
+            [128,   255,  128,    127],
 
-        let numberOfOperations = 5_000_000
+            [254,   0,      0,      0],
+            [254,   1,    254,      0],
+            [254,   128,    0,    127],
+            [254,   254,    4,    252],
+            [254,   255,    2,    253],
 
-        for operation in (0..<numberOfOperations) {
-            if operation % 100000 == 0 {
-                print(operation)
-            }
+            [255,   0,      0,      0],
+            [255,   1,    255,      0],
+            [255,   128,  128,    127],
+            [255,   254,    2,    253],
+            [255,   255,    1,    254],
+        ]
 
-            let a: [UInt8] = [
-                .random(in: 0...UInt8.max),
-                .random(in: 0...UInt8.max)
-            ]
-
-            let b: [UInt8] = [
-                .random(in: 0...UInt8.max),
-                .random(in: 0...UInt8.max)
-            ]
-
-            let c = add(a, b)
-
-            let c16 = to_16(a).addingReportingOverflow(to_16(b))
-
-            XCTAssertEqual(to_16(c.result), c16.partialValue)
-            XCTAssertEqual(c.overflow, c16.overflow ? 1 : 0)
+        for row in table {
+            let product = multiplyScalars(row[0], row[1])
+            let expected = [row[2], row[3]]
+            XCTAssertEqual(product, expected, "\(row[0]) x \(row[1])")
         }
     }
 
-    func test_subtract_randomized() {
-        continueAfterFailure = false
+    func test_multiplyByScalar() {
+        let table: [[Digit]] = [
+            [0,    0,    0,    0,    0,    0,    ],
+            [0,    0,    1,    0,    0,    0,    ],
+            [0,    0,    128,  0,    0,    0,    ],
+            [0,    0,    254,  0,    0,    0,    ],
+            [0,    0,    255,  0,    0,    0,    ],
+            [0,    1,    0,    0,    0,    0,    ],
+            [0,    1,    1,    0,    0,    0,    ],
+            [0,    1,    128,  0,    0,    0,    ],
+            [0,    1,    254,  0,    0,    0,    ],
+            [0,    1,    255,  0,    0,    0,    ],
+            [0,    128,  0,    0,    0,    0,    ],
+            [0,    128,  1,    0,    0,    0,    ],
+            [0,    128,  128,  0,    0,    0,    ],
+            [0,    128,  254,  0,    0,    0,    ],
+            [0,    128,  255,  0,    0,    0,    ],
+            [0,    254,  0,    0,    0,    0,    ],
+            [0,    254,  1,    0,    0,    0,    ],
+            [0,    254,  128,  0,    0,    0,    ],
+            [0,    254,  254,  0,    0,    0,    ],
+            [0,    254,  255,  0,    0,    0,    ],
+            [0,    255,  0,    0,    0,    0,    ],
+            [0,    255,  1,    0,    0,    0,    ],
+            [0,    255,  128,  0,    0,    0,    ],
+            [0,    255,  254,  0,    0,    0,    ],
+            [0,    255,  255,  0,    0,    0,    ],
+            [1,    0,    0,    0,    0,    0,    ],
+            [1,    0,    1,    0,    1,    0,    ],
+            [1,    0,    128,  0,    128,  0,    ],
+            [1,    0,    254,  0,    254,  0,    ],
+            [1,    0,    255,  0,    255,  0,    ],
+            [1,    1,    0,    1,    0,    0,    ],
+            [1,    1,    1,    1,    1,    0,    ],
+            [1,    1,    128,  1,    128,  0,    ],
+            [1,    1,    254,  1,    254,  0,    ],
+            [1,    1,    255,  1,    255,  0,    ],
+            [1,    128,  0,    128,  0,    0,    ],
+            [1,    128,  1,    128,  1,    0,    ],
+            [1,    128,  128,  128,  128,  0,    ],
+            [1,    128,  254,  128,  254,  0,    ],
+            [1,    128,  255,  128,  255,  0,    ],
+            [1,    254,  0,    254,  0,    0,    ],
+            [1,    254,  1,    254,  1,    0,    ],
+            [1,    254,  128,  254,  128,  0,    ],
+            [1,    254,  254,  254,  254,  0,    ],
+            [1,    254,  255,  254,  255,  0,    ],
+            [1,    255,  0,    255,  0,    0,    ],
+            [1,    255,  1,    255,  1,    0,    ],
+            [1,    255,  128,  255,  128,  0,    ],
+            [1,    255,  254,  255,  254,  0,    ],
+            [1,    255,  255,  255,  255,  0,    ],
+            [128,  0,    0,    0,    0,    0,    ],
+            [128,  0,    1,    0,    128,  0,    ],
+            [128,  0,    128,  0,    0,    64,   ],
+            [128,  0,    254,  0,    0,    127,  ],
+            [128,  0,    255,  0,    128,  127,  ],
+            [128,  1,    0,    128,  0,    0,    ],
+            [128,  1,    1,    128,  128,  0,    ],
+            [128,  1,    128,  128,  0,    64,   ],
+            [128,  1,    254,  128,  0,    127,  ],
+            [128,  1,    255,  128,  128,  127,  ],
+            [128,  128,  0,    0,    64,   0,    ],
+            [128,  128,  1,    0,    192,  0,    ],
+            [128,  128,  128,  0,    64,   64,   ],
+            [128,  128,  254,  0,    64,   127,  ],
+            [128,  128,  255,  0,    192,  127,  ],
+            [128,  254,  0,    0,    127,  0,    ],
+            [128,  254,  1,    0,    255,  0,    ],
+            [128,  254,  128,  0,    127,  64,   ],
+            [128,  254,  254,  0,    127,  127,  ],
+            [128,  254,  255,  0,    255,  127,  ],
+            [128,  255,  0,    128,  127,  0,    ],
+            [128,  255,  1,    128,  255,  0,    ],
+            [128,  255,  128,  128,  127,  64,   ],
+            [128,  255,  254,  128,  127,  127,  ],
+            [128,  255,  255,  128,  255,  127,  ],
+            [254,  0,    0,    0,    0,    0,    ],
+            [254,  0,    1,    0,    254,  0,    ],
+            [254,  0,    128,  0,    0,    127,  ],
+            [254,  0,    254,  0,    4,    252,  ],
+            [254,  0,    255,  0,    2,    253,  ],
+            [254,  1,    0,    254,  0,    0,    ],
+            [254,  1,    1,    254,  254,  0,    ],
+            [254,  1,    128,  254,  0,    127,  ],
+            [254,  1,    254,  254,  4,    252,  ],
+            [254,  1,    255,  254,  2,    253,  ],
+            [254,  128,  0,    0,    127,  0,    ],
+            [254,  128,  1,    0,    125,  1,    ],
+            [254,  128,  128,  0,    127,  127,  ],
+            [254,  128,  254,  0,    131,  252,  ],
+            [254,  128,  255,  0,    129,  253,  ],
+            [254,  254,  0,    4,    252,  0,    ],
+            [254,  254,  1,    4,    250,  1,    ],
+            [254,  254,  128,  4,    252,  127,  ],
+            [254,  254,  254,  4,    0,    253,  ],
+            [254,  254,  255,  4,    254,  253,  ],
+            [254,  255,  0,    2,    253,  0,    ],
+            [254,  255,  1,    2,    251,  1,    ],
+            [254,  255,  128,  2,    253,  127,  ],
+            [254,  255,  254,  2,    1,    253,  ],
+            [254,  255,  255,  2,    255,  253,  ],
+            [255,  0,    0,    0,    0,    0,    ],
+            [255,  0,    1,    0,    255,  0,    ],
+            [255,  0,    128,  0,    128,  127,  ],
+            [255,  0,    254,  0,    2,    253,  ],
+            [255,  0,    255,  0,    1,    254,  ],
+            [255,  1,    0,    255,  0,    0,    ],
+            [255,  1,    1,    255,  255,  0,    ],
+            [255,  1,    128,  255,  128,  127,  ],
+            [255,  1,    254,  255,  2,    253,  ],
+            [255,  1,    255,  255,  1,    254,  ],
+            [255,  128,  0,    128,  127,  0,    ],
+            [255,  128,  1,    128,  126,  1,    ],
+            [255,  128,  128,  128,  255,  127,  ],
+            [255,  128,  254,  128,  129,  253,  ],
+            [255,  128,  255,  128,  128,  254,  ],
+            [255,  254,  0,    2,    253,  0,    ],
+            [255,  254,  1,    2,    252,  1,    ],
+            [255,  254,  128,  2,    125,  128,  ],
+            [255,  254,  254,  2,    255,  253,  ],
+            [255,  254,  255,  2,    254,  254,  ],
+            [255,  255,  0,    1,    254,  0,    ],
+            [255,  255,  1,    1,    253,  1,    ],
+            [255,  255,  128,  1,    126,  128,  ],
+            [255,  255,  254,  1,    0,    254,  ],
+            [255,  255,  255,  1,    255,  254,  ],
+        ]
 
-        // test subtraction algorithm using digits of
-        // smaller size and convert the difference
-        // to a bigger bit width to compare
-        // with the builtin subtraction result
-
-        let numberOfOperations = 5_000_000
-
-        for operation in (0..<numberOfOperations) {
-            if operation % 100_000 == 0 {
-                print(operation)
-            }
-
-            let a: [UInt8] = [
-                .random(in: 0...UInt8.max),
-                .random(in: 0...UInt8.max)
-            ]
-
-            let b: [UInt8] = [
-                .random(in: 0...UInt8.max),
-                .random(in: 0...UInt8.max)
-            ]
-
-            let c = subtract(a, b)
-
-            let c16 = to_16(a).subtractingReportingOverflow(to_16(b))
-
-            XCTAssertEqual(to_16(c.result), c16.partialValue)
-            XCTAssertEqual(c.overflow, c16.overflow ? 1 : 0)
+        for row in table {
+            let product = multiplyByScalar(row[0], [row[1], row[2]])
+            let expected = [row[3], row[4], row[5]]
+            XCTAssertEqual(product, expected, "\(row[0]) x (\(row[1]), \(row[2]))")
         }
+    }
+
+    func util_generate_multiplyByScalarTable() {
+        let S: [UInt8] = [0, 1, 128, 254, 255]
+
+        for a in S {
+            for b0 in S {
+                for b1 in S {
+                    let c: UInt32 = UInt32(a) * (UInt32(b0) + UInt32(b1) * 1 << 8)
+                    let c2 = c / 1 << 16
+                    let c1 = (c - c2 * 1 << 16) / (1 << 8)
+                    let c0 = (c - (c2 * 1 << 16 + c1 * 1 << 8))
+
+                    assert(c0 + 1 << 8 * c1 + 1 << 16 * c2 == c)
+
+                    let row = [a, b0, b1, UInt8(c0), UInt8(c1), UInt8(c2)]
+
+                    print("[" + row.map(String.init(describing:)).map { ($0 + ",").padding(toLength: 6, withPad: " ", startingAt: 0)}.joined() + "],")
+                }
+            }
+        }
+
     }
 }
