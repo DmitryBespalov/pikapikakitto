@@ -170,7 +170,11 @@ class ArithmeticTests: XCTestCase {
     }
 
     func test_multiplyByScalar() {
+        // To re-generate the table, uncomment and take the console output from:
+        // util_generate_multiplyByScalarTable()
+
         let table: [[Digit]] = [
+        //  [a,   b0,   b1,   c0,   c1,   c2     ],
             [0,    0,    0,    0,    0,    0,    ],
             [0,    0,    1,    0,    0,    0,    ],
             [0,    0,    128,  0,    0,    0,    ],
@@ -305,12 +309,24 @@ class ArithmeticTests: XCTestCase {
         }
     }
 
+    /// Generates a table for testing `multiplyByScalar`
+    ///
+    /// Generates a table for testing scalar with vector multiplication:
+    ///
+    ///     a x b = c
+    ///
+    /// where `a` is a Digit, `b` is a 2-digit number, and `c` is a 3-digit number in base-256 (2^8)
     func util_generate_multiplyByScalarTable() {
         let S: [UInt8] = [0, 1, 128, 254, 255]
+
 
         for a in S {
             for b0 in S {
                 for b1 in S {
+                    // for reference:
+                    // 2 ^ 8 = 1 << 8 = 256
+                    // 2 ^ 16 = 1 << 16 = 65.536
+
                     let c: UInt32 = UInt32(a) * (UInt32(b0) + UInt32(b1) * 1 << 8)
                     let c2 = c / 1 << 16
                     let c1 = (c - c2 * 1 << 16) / (1 << 8)
@@ -320,10 +336,11 @@ class ArithmeticTests: XCTestCase {
 
                     let row = [a, b0, b1, UInt8(c0), UInt8(c1), UInt8(c2)]
 
-                    print("[" + row.map(String.init(describing:)).map { ($0 + ",").padding(toLength: 6, withPad: " ", startingAt: 0)}.joined() + "],")
+                    print("[" +
+                          row.map { "\($0),".padding(toLength: 6, withPad: " ", startingAt: 0)}.joined() +
+                          "],")
                 }
             }
         }
-
     }
 }
