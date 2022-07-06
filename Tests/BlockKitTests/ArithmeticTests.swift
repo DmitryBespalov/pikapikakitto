@@ -1674,4 +1674,191 @@ class ArithmeticTests: XCTestCase {
         }
         print("]")
     }
+
+    func test_shiftRight() {
+        let table: [(a: [Digit], n: Int, result: [Digit])] = [
+            (a: [0, 0], n: 1, result: [0, 0]),
+            (a: [1, 0], n: 1, result: [0, 1]),
+            (a: [1, 2], n: 1, result: [0, 1]),
+
+            (a: [0, 0, 0], n: 1, result: [0, 0, 0]),
+            (a: [1, 0, 0], n: 1, result: [0, 1, 0]),
+            (a: [1, 2, 0], n: 1, result: [0, 1, 2]),
+            (a: [1, 2, 3], n: 1, result: [0, 1, 2]),
+
+            (a: [0, 0, 0], n: 2, result: [0, 0, 0]),
+            (a: [1, 0, 0], n: 2, result: [0, 0, 1]),
+            (a: [1, 2, 0], n: 2, result: [0, 0, 1]),
+            (a: [1, 2, 3], n: 2, result: [0, 0, 1]),
+
+            (a: [0, 0, 0, 0, 0, 0, 0], n: 1, result: [0, 0, 0, 0, 0, 0, 0]),
+            (a: [1, 0, 0, 0, 0, 0, 0], n: 1, result: [0, 1, 0, 0, 0, 0, 0]),
+            (a: [1, 2, 3, 0, 0, 0, 0], n: 1, result: [0, 1, 2, 3, 0, 0, 0]),
+            (a: [1, 2, 3, 4, 5, 6, 0], n: 1, result: [0, 1, 2, 3, 4, 5, 6]),
+            (a: [1, 2, 3, 4, 5, 6, 7], n: 1, result: [0, 1, 2, 3, 4, 5, 6]),
+
+            (a: [0, 0, 0, 0, 0, 0, 0], n: 2, result: [0, 0, 0, 0, 0, 0, 0]),
+            (a: [1, 0, 0, 0, 0, 0, 0], n: 2, result: [0, 0, 1, 0, 0, 0, 0]),
+            (a: [1, 2, 3, 0, 0, 0, 0], n: 2, result: [0, 0, 1, 2, 3, 0, 0]),
+            (a: [1, 2, 3, 4, 5, 6, 0], n: 2, result: [0, 0, 1, 2, 3, 4, 5]),
+            (a: [1, 2, 3, 4, 5, 6, 7], n: 2, result: [0, 0, 1, 2, 3, 4, 5]),
+
+            (a: [0, 0, 0, 0, 0, 0, 0], n: 4, result: [0, 0, 0, 0, 0, 0, 0]),
+            (a: [1, 0, 0, 0, 0, 0, 0], n: 4, result: [0, 0, 0, 0, 1, 0, 0]),
+            (a: [1, 2, 3, 0, 0, 0, 0], n: 4, result: [0, 0, 0, 0, 1, 2, 3]),
+            (a: [1, 2, 3, 4, 5, 6, 0], n: 4, result: [0, 0, 0, 0, 1, 2, 3]),
+            (a: [1, 2, 3, 4, 5, 6, 7], n: 4, result: [0, 0, 0, 0, 1, 2, 3]),
+
+            (a: [0, 0, 0, 0, 0, 0, 0], n: 5, result: [0, 0, 0, 0, 0, 0, 0]),
+            (a: [1, 0, 0, 0, 0, 0, 0], n: 5, result: [0, 0, 0, 0, 0, 1, 0]),
+            (a: [1, 2, 3, 0, 0, 0, 0], n: 5, result: [0, 0, 0, 0, 0, 1, 2]),
+            (a: [1, 2, 3, 4, 5, 6, 0], n: 5, result: [0, 0, 0, 0, 0, 1, 2]),
+            (a: [1, 2, 3, 4, 5, 6, 7], n: 5, result: [0, 0, 0, 0, 0, 1, 2]),
+
+            (a: [0, 0, 0, 0, 0, 0, 0], n: 6, result: [0, 0, 0, 0, 0, 0, 0]),
+            (a: [1, 0, 0, 0, 0, 0, 0], n: 6, result: [0, 0, 0, 0, 0, 0, 1]),
+            (a: [1, 2, 3, 0, 0, 0, 0], n: 6, result: [0, 0, 0, 0, 0, 0, 1]),
+            (a: [1, 2, 3, 4, 5, 6, 0], n: 6, result: [0, 0, 0, 0, 0, 0, 1]),
+            (a: [1, 2, 3, 4, 5, 6, 7], n: 6, result: [0, 0, 0, 0, 0, 0, 1]),
+
+            (a: [0, 0, 0, 0, 0, 0, 0, 0], n: 1, result: [0, 0, 0, 0, 0, 0, 0, 0]),
+            (a: [1, 0, 0, 0, 0, 0, 0, 0], n: 1, result: [0, 1, 0, 0, 0, 0, 0, 0]),
+            (a: [1, 2, 3, 4, 0, 0, 0, 0], n: 1, result: [0, 1, 2, 3, 4, 0, 0, 0]),
+            (a: [1, 2, 3, 4, 5, 6, 7, 0], n: 1, result: [0, 1, 2, 3, 4, 5, 6, 7]),
+            (a: [1, 2, 3, 4, 5, 6, 7, 8], n: 1, result: [0, 1, 2, 3, 4, 5, 6, 7]),
+
+            (a: [0, 0, 0, 0, 0, 0, 0, 0], n: 2, result: [0, 0, 0, 0, 0, 0, 0, 0]),
+            (a: [1, 0, 0, 0, 0, 0, 0, 0], n: 2, result: [0, 0, 1, 0, 0, 0, 0, 0]),
+            (a: [1, 2, 3, 4, 0, 0, 0, 0], n: 2, result: [0, 0, 1, 2, 3, 4, 0, 0]),
+            (a: [1, 2, 3, 4, 5, 6, 7, 0], n: 2, result: [0, 0, 1, 2, 3, 4, 5, 6]),
+            (a: [1, 2, 3, 4, 5, 6, 7, 8], n: 2, result: [0, 0, 1, 2, 3, 4, 5, 6]),
+
+            (a: [0, 0, 0, 0, 0, 0, 0, 0], n: 5, result: [0, 0, 0, 0, 0, 0, 0, 0]),
+            (a: [1, 0, 0, 0, 0, 0, 0, 0], n: 5, result: [0, 0, 0, 0, 0, 1, 0, 0]),
+            (a: [1, 2, 3, 4, 0, 0, 0, 0], n: 5, result: [0, 0, 0, 0, 0, 1, 2, 3]),
+            (a: [1, 2, 3, 4, 5, 6, 7, 0], n: 5, result: [0, 0, 0, 0, 0, 1, 2, 3]),
+            (a: [1, 2, 3, 4, 5, 6, 7, 8], n: 5, result: [0, 0, 0, 0, 0, 1, 2, 3]),
+
+            (a: [0, 0, 0, 0, 0, 0, 0, 0], n: 6, result: [0, 0, 0, 0, 0, 0, 0, 0]),
+            (a: [1, 0, 0, 0, 0, 0, 0, 0], n: 6, result: [0, 0, 0, 0, 0, 0, 1, 0]),
+            (a: [1, 2, 3, 4, 0, 0, 0, 0], n: 6, result: [0, 0, 0, 0, 0, 0, 1, 2]),
+            (a: [1, 2, 3, 4, 5, 6, 7, 0], n: 6, result: [0, 0, 0, 0, 0, 0, 1, 2]),
+            (a: [1, 2, 3, 4, 5, 6, 7, 8], n: 6, result: [0, 0, 0, 0, 0, 0, 1, 2]),
+
+            (a: [0, 0, 0, 0, 0, 0, 0, 0], n: 7, result: [0, 0, 0, 0, 0, 0, 0, 0]),
+            (a: [1, 0, 0, 0, 0, 0, 0, 0], n: 7, result: [0, 0, 0, 0, 0, 0, 0, 1]),
+            (a: [1, 2, 3, 4, 0, 0, 0, 0], n: 7, result: [0, 0, 0, 0, 0, 0, 0, 1]),
+            (a: [1, 2, 3, 4, 5, 6, 7, 0], n: 7, result: [0, 0, 0, 0, 0, 0, 0, 1]),
+            (a: [1, 2, 3, 4, 5, 6, 7, 8], n: 7, result: [0, 0, 0, 0, 0, 0, 0, 1]),
+        ]
+
+        for row in table {
+            let result = shiftRight(row.a, row.n)
+            XCTAssertEqual(result, row.result, "\(row.a), \(row.n)")
+        }
+    }
+
+    func util_generateTable_shiftRight() {
+        // Specify range of tested variables
+
+        // A: a.count = { 2, 3, 7, 8 }
+        let A = [2, 3, 7, 8]
+
+        // N: n = { 1, 2, a.count / 2 + 1, a.count - 2, a.count - 1 } | n < a.count
+        let NGen: [(Int) -> Int] = [
+            { _ in 1 }, { _ in 2 }, { aCount in aCount / 2 + 1 }, { aCount in aCount - 2 }, { aCount in aCount - 1 }
+        ]
+        // I: a[i] = { empty, one, half, one-less, full }
+        let IGen: [(Int) -> Int] = [
+            { _ in 0 }, { _ in 1 }, { aCount in aCount / 2 }, { aCount in aCount - 1 }, { aCount in aCount }
+        ]
+
+        // Generate testing table.
+        // NOTE: double check the result manually.
+
+        for aCount in A {
+            // take only distinct values matching requirements
+            let N = Array(Set(NGen.map { n in n(aCount) }.filter { n in n < aCount && n > 0 })).sorted()
+
+            for n in N {
+
+                // take only distinct values matching requirements
+                let I = Array(Set(IGen.map { i in i(aCount) }.filter { i in i >= 0 })).sorted()
+
+                for i in I {
+                    var a = [Digit](repeating: 0, count: aCount)
+                    a[0..<i] = ArraySlice( (0..<i).map { Digit($0) + 1 } )
+
+                    let result = shiftRight(a, n)
+
+                    print("(a: \(a), n: \(n), result: \(result)),")
+                }
+
+                print()
+            }
+        }
+    }
+
+    func test_padRight() {
+        let table: [(a: [Digit], size: Int, result: [Digit])] = [
+            (a: [], size: -1, result: []),
+            (a: [], size: 0, result: []),
+            (a: [], size: 1, result: [0]),
+
+            (a: [0], size: -1, result: [0]),
+            (a: [0], size: 0, result: [0]),
+            (a: [0], size: 1, result: [0]),
+            (a: [0], size: 2, result: [0, 0]),
+
+            (a: [0, 1, 2, 3, 4, 5, 6], size: -1, result: [0, 1, 2, 3, 4, 5, 6]),
+            (a: [0, 1, 2, 3, 4, 5, 6], size: 0, result: [0, 1, 2, 3, 4, 5, 6]),
+            (a: [0, 1, 2, 3, 4, 5, 6], size: 6, result: [0, 1, 2, 3, 4, 5, 6]),
+            (a: [0, 1, 2, 3, 4, 5, 6], size: 7, result: [0, 1, 2, 3, 4, 5, 6]),
+            (a: [0, 1, 2, 3, 4, 5, 6], size: 8, result: [0, 1, 2, 3, 4, 5, 6, 0]),
+            (a: [0, 1, 2, 3, 4, 5, 6], size: 14, result: [0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0]),
+
+            (a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], size: -1, result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+            (a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], size: 0, result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+            (a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], size: 9, result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+            (a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], size: 10, result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+            (a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], size: 11, result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0]),
+            (a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], size: 20, result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+
+            (a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], size: -1, result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+            (a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], size: 0, result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+            (a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], size: 10, result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+            (a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], size: 11, result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+            (a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], size: 12, result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0]),
+            (a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], size: 22, result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+
+        ]
+
+        for row in table {
+            let result = padRight(row.a, row.size)
+            XCTAssertEqual(result, row.result, "\(row.a), \(row.size)")
+        }
+    }
+
+    func util_generateTable_padRight() {
+        // NOTE: double check the result manually
+
+        let A = [0, 1, 7, 10, 11]
+        let S: [(Int) -> Int] = [
+            { _ in -1 }, { _ in 0 }, { aCount in aCount - 1 }, { aCount in aCount }, { aCount in aCount + 1}, { aCount in aCount * 2 }
+        ]
+        for aCount in A {
+            let Size = Array(Set(S.map { size in size(aCount) })).sorted()
+
+            for size in Size {
+                var a = [Digit](repeating: 0, count: aCount)
+                a[0..<aCount] = ArraySlice( (0..<aCount).map { Digit($0) } )
+
+                let result = padRight(a, size)
+
+                print("(a: \(a), size: \(size), result: \(result)),")
+            }
+
+            print()
+        }
+    }
 }

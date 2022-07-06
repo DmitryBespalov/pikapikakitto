@@ -303,7 +303,7 @@ func multiplyByScalar<Digit>(_ a: Digit, _ b: [Digit]) -> [Digit] where Digit: U
 ///
 /// - **Requires**:
 ///   - `a`: multiple-digit base-Digit number, 0-index is the lowest significant digit.
-///   - `n < a.count`
+///   - `0 < n < a.count`
 /// - **Guarantees**:
 ///   - `result.count == a.count`
 ///   - `result[0..<n] == 0`
