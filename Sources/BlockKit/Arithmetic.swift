@@ -453,30 +453,3 @@ func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: Unsigne
     return p
         // return the p, a product of a and b.
 }
-
-func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (quotient: [Digit], remainder: [Digit]) where Digit: UnsignedInteger & FixedWidthInteger {
-    // division is the inverse of multiplication
-        // division without remainder
-            // a / b = c is inverse of c * b = a
-            // thus, for b > 1
-            // a has 2D digits while c and b have D digits.
-            // for b == 1: c == a, i.e. a has 2D digits and c has 2D digits.
-                // what do we do? we have only D digits to fit,
-                // Swift standard library just truncates the result to D digits
-            // for b == 0: runtime error, division by zero, i.e. c can be anything
-        // division with remainder r > 0
-            // a / b = c + r / b where r < b, is inverse of a = c * b + r
-            // again, b != 0, otherwise it is division by 0 and is a runtime error
-            // b == 1 is impossible, remainder is always 0, because only 0 < 1
-            // so, the result is always D-digit long if the dividend is 2D - digit long, and so divisor is also
-            // D digits long.
-
-        // division is answering the question: which number multiplied by divisor and then added with which another
-        // number would be equal to the dividend? It is equivalent to finding coefficients of the
-        // number a in terms of linear combination by factor b:
-        // a / b = x + y / b (x is the quotient and y is the remainder)
-        // a = x * b^1 + y * b^0 = x * b + y
-
-
-    ([], [])
-}
