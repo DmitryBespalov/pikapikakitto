@@ -1,3 +1,7 @@
-# BlockKit
+# PikapikaKitto
 
-A description of this package.
+Fixed big generic integer arithmetic. 
+
+By: @DmitryBespalov
+
+License: MIT

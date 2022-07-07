@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import BlockKit
+@testable import PikapikaKitto
 
 class ArithmeticRandomizedTests: XCTestCase {
     let numberOfOperations = 1_000_000

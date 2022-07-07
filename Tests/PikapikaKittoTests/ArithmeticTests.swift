@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import BlockKit
+@testable import PikapikaKitto
 
 class ArithmeticTests: XCTestCase {
     typealias Digit = UInt8
