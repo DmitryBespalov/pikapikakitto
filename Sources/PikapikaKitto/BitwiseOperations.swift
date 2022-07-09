@@ -15,8 +15,8 @@ import Foundation
 ///   - `bits > 0 && bits < a.count`
 ///   - `fill == 0 || fill == Digit.max`  (all 0-s or all 1-s)
 /// - **Guarantees**:
-///   - result's bits shifted right by `bitShiftCount` positions
-///   - result's bits before the first shifted bit are filled from the `fill`
+///   - `result_bits[i] == source_bits[i + bitShiftCount] for i >= bitShiftCount and i < result_bits.count`
+///   - `result_bits[i] == 0 for i < bitShiftCount and i > 0`
 ///   - `result.count == a.count`
 ///
 /// - Parameters:
@@ -24,11 +24,11 @@ import Foundation
 ///   - bits: shift size
 ///   - fill: pass 0 or Digit.max (0 default) which will be used to fill the bits on the left
 /// - Returns: shifted number
-func bitShiftRight<Digit>(_ a: [Digit], bitShiftCount: Int, fill: Digit = 0) -> [Digit] where Digit: FixedWidthInteger & UnsignedInteger {
+func bitShiftRight<Digit>(_ a: [Digit], bitShiftCount: Int) -> [Digit] where Digit: FixedWidthInteger & UnsignedInteger {
     let misalignment = bitShiftCount % Digit.bitWidth
         // there are 2 cases to handle:
         // when the number of bits to shift is exactly divisible by the digit's bit width,
-        // and when there's a remainder, leading to misalignment of source/result digit edges
+        // and when there's a remainder, leading to a misalignment of source/result digit edges
         // that we need to account for.
 
     let digitShiftCount = bitShiftCount / Digit.bitWidth
@@ -40,20 +40,23 @@ func bitShiftRight<Digit>(_ a: [Digit], bitShiftCount: Int, fill: Digit = 0) -> 
         // shift digits of a number right by the `digitShiftCount` amount
         // because the bit shift divides without remainder by the digit bit width
     if misalignment == 0 {
-        var b = [Digit](repeating: fill, count: a.count)
+        var b = [Digit](repeating: 0, count: a.count)
 
         // for each digit, set its value from source
-        for resultIndex in (0..<a.count) {
+        for resultIndex in (0..<b.count) {
 
             // result's digit is a shifted source digit by `digitShiftCount` number, or "fill" value if out of bounds
             let sourceIndex = resultIndex + digitShiftCount
-            b[resultIndex] = sourceIndex < a.count ? a[sourceIndex] : fill
-                // Digits start at the lowest significant digit first.
-                // Bits of digits start at the most significant bit first.
-                // That means the digit shift direction is opposite to the bit shift direction.
-                // If we shift bits right by X, then we shift digits left by X.
-                // Meaning, result digit index is less than source digit index by the number of digits shifted.
-                // Thus, to get source digit index, we need to add `digitShiftCount` to the result's index.
+            b[resultIndex] = sourceIndex < a.count ? a[sourceIndex] : 0
+                // in a bit shift by M bits,
+                // if M % bitWidth == 0 then D = (M / bitWidth) is the shift of digits to
+                // the bit shift direction.
+                //
+                // Given that the least significant digit is at index 0, and most
+                // significant digit is at the index `a.count - 1`,
+                //
+                // k-th bit of source digit at index j becomes k-th bit of result digit at (j - D).
+                //  <=> k-th bit of result digit at j is from k-th bit of source digit (j + D).
         }
         return b
     } else {
@@ -61,7 +64,7 @@ func bitShiftRight<Digit>(_ a: [Digit], bitShiftCount: Int, fill: Digit = 0) -> 
         // misalignment < bitWidth, therefore resulting digit may be composed of
         // parsts of 2 source digits next to each other.
 
-        var b = [Digit](repeating: fill, count: a.count)
+        var b = [Digit](repeating: 0, count: a.count)
 
         // for each digit, set its value from source digits
         for resultIndex in (0..<a.count) {
@@ -70,6 +73,13 @@ func bitShiftRight<Digit>(_ a: [Digit], bitShiftCount: Int, fill: Digit = 0) -> 
 
             // high part is from source digit (i + bits / bitWidth + 1)
             let highSourceIndex = resultIndex + digitShiftCount + 1
+                // in a bit shift by M bits,
+                // if p = (M % bitWidth) and p != 0 then D = (M / bitWidth) and M = D + p
+                // a's digit indices
+                // D <= i < a.count --> i - D (higher part) and to i - D - 1 (lower part)
+                // i < qD --> out of bounds
+                
+
                 // because bits and digits' indices start at opposite sides,
                 // the right bit shift leads to the left digit shift,
                 // which means that the source index is greater than the result index,
@@ -98,7 +108,7 @@ func bitShiftRight<Digit>(_ a: [Digit], bitShiftCount: Int, fill: Digit = 0) -> 
 
             // high part is a source digit left-shifted << by ( bitWidth - misalignment ) bits
             let highBitShift = Digit.bitWidth - misalignment
-            let highPart = ( highSourceIndex < a.count ? a[highSourceIndex] : fill ) << highBitShift
+            let highPart = ( highSourceIndex < a.count ? a[highSourceIndex] : 0 ) << highBitShift
                 // consider the high ("left") part of the result.
                 // it comes from the low ("right") part of a source digit
                 //
@@ -118,7 +128,7 @@ func bitShiftRight<Digit>(_ a: [Digit], bitShiftCount: Int, fill: Digit = 0) -> 
 
             // part is a source digit right-shifted >> by ( misalignment ) bits
             let lowBitShift = misalignment
-            let lowPart = ( lowIndex < a.count ? a[lowIndex] : fill ) >> lowBitShift
+            let lowPart = ( lowIndex < a.count ? a[lowIndex] : 0 ) >> lowBitShift
                 // consider the low (right) part of the result.
                 // It comes from the high (left) part of the source digit.
                 //
