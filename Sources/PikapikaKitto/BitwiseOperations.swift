@@ -112,22 +112,31 @@ func bitShiftRight<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedW
 }
 
 func bitShiftLeft<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedWidthInteger & UnsignedInteger {
-    // `fill` is 0 or all-Fs (max digit)
-    // shift size aligned with digit bit width
-        // shift digits left by ( size / bitWidth ) digits
-        // result digit is source digit at ( i - size / bitWidth ) or `fill` if index out of bounds
-            // Digits start at least significant digit first.
-            // Bits start at most significant bit first.
-            // That means that digit shift is opposite to bit shift direction.
-            // Left bit shift is right digit shift.
-            // Thus, result digit index is more than source digit index by number of digits shifted.
-            // Thus, to get result index, we need subtract from it the number of digits shifted.
-    // shift size misaligned with digit bit width
-        // result's digit is composed of source's parts of two digits
-        // high part is from source digit (i - size / bitWidth ) or `fill` if index out of bounds
-            // part is a source digit left-shifted << by ( size % bitWidth ) bits
-        // low part is from source digit (i - size / bitWidth - 1 ) or `fill` if index out of bounds
-            // part is a source digit right-shifted >> by ( bitWidth - size % bitWidth ) bits
-    []
+    if t == 0 {
+        return a
+    }
+    if t < 0 {
+        return bitShiftRight(a, -t)
+    }
+    var x = [Digit](repeating: 0, count: a.count)
+    if t >= a.count {
+        // overshift occurred, no bits of a are in the result.
+        return x
+    }
+    let W = Digit.bitWidth
+    let q = t / W
+    let r = t % W
+    let a_at: (Int) -> Digit = { offset in  ( offset < a.count && offset >= 0 ) ? a[offset] : 0 }
+    if r == 0 {
+        for d in (0..<x.count) {
+            x[d] = a_at(d - q)
+        }
+    } else {
+        for d in (0..<x.count) {
+            let high = a_at(d - q) << r
+            let low = a_at(d - q - 1) >> (W - r)
+            x[d] = high | low
+        }
+    }
+    return x
 }
-
