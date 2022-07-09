@@ -26,12 +26,12 @@ func bitShiftRight<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedW
     if t == 0 {
         return a
     }
-    // Now, t != 0
+    // else t != 0
 
     if t < 0 {
         return bitShiftLeft(a, -t)
     }
-    // Now, t > 0
+    // else t > 0
 
     // resulting number
     var x = [Digit](repeating: 0, count: a.count)
@@ -40,7 +40,7 @@ func bitShiftRight<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedW
         // overshift occurred, no bits of a are in the result.
         return x
     }
-    // Now, t > 0 && t < a.count
+    // else t > 0 && t < a.count
 
     let W = Digit.bitWidth
     let q = t / W
@@ -48,7 +48,7 @@ func bitShiftRight<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedW
     // it follows from above that t == q * W + r
 
     // let's define a helper: a's subscript that returns 0 if offset is out of bounds
-    let a_at: (Int) -> Digit = { offset in  offset < a.count && offset >= 0 ? a[offset] : 0 }
+    let a_at: (Int) -> Digit = { offset in  ( offset < a.count && offset >= 0 ) ? a[offset] : 0 }
 
     if r == 0 {
         for d in (0..<x.count) {
