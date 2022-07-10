@@ -1,6 +1,7 @@
 # PikapikaKitto
+Set of tools for working with blockchains in Swift.
 
-Fixed big generic integer arithmetic. 
+- 👷🏻 WIP: Fixed big generic integer arithmetic
 
 By: @DmitryBespalov
 
