@@ -111,27 +111,104 @@ func bitShiftRight<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedW
     return x
 }
 
+/// Shifts the digit `a` by `t` bits to the left with 0-padding from the right.
+///
+/// - **Requires**:
+///   - a: multiple-digit number, with least significant digit at index 0
+/// - **Guarantees**:
+///   - if `t < 0` then result is `bitShiftRight(a, -t)`
+///   - if `t == 0` then result is same as input `a`
+///   - if `t >= a.count` then result is number with `a.count` zero digits
+///   - otherwise, the result is a number shifted to the left by `t` bits and padded with 0-bits from right.
+///
+/// - Parameters:
+///   - a: multi-digit number
+///   - t: number of bits to shift `a` left
+/// - Returns: number with shifted bits
 func bitShiftLeft<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedWidthInteger & UnsignedInteger {
     if t == 0 {
         return a
     }
+    // else t != 0
     if t < 0 {
         return bitShiftRight(a, -t)
     }
+    // else t > 0
+
     var x = [Digit](repeating: 0, count: a.count)
+
     if t >= a.count {
         // overshift occurred, no bits of a are in the result.
         return x
     }
+    // else t > 0 && t < a.count
+
     let W = Digit.bitWidth
     let q = t / W
     let r = t % W
+    // t == q * W + r
+
     let a_at: (Int) -> Digit = { offset in  ( offset < a.count && offset >= 0 ) ? a[offset] : 0 }
+        // `0` is used if offset < 0 or offset >= a.count
+
     if r == 0 {
+        // shift size divisable without remainder by digit width, so we translate all digits by the factor, `q`.
         for d in (0..<x.count) {
             x[d] = a_at(d - q)
+                // left shift by q bits is translating bits from lower indices to higher ones
+                // and thus index `d` of a result needs to be decreased by `q` to get to the input digit index.
         }
     } else {
+        // else r > 0 && r < W
+        //
+        // every digit of result is composed of 2 misaligned digits of input
+        //
+        //
+        // |876|543|210| << 5  => |321|000|000|
+        //
+        //   2   1   0   // digit index
+        // |876|543|210| // input
+        // |321|000|000| // result
+        //
+        // reuslt[2] composed of (5 % 3 = 1) lower bit of input[1] and (3 - 5/3 = 2) higher bits of input[0].
+        // input indices 1 and 0 are calculated from the result index by 2 - 5/3 = 1 and 2 - 5/3 - 1 = 0
+        //
+        // Let's generalize to any bit and digit index.
+        //
+        // The result's bit index is represented as
+        // i = dW + j
+        // where d is digit offset in the result number, d: [0..<x.count]
+        // and j is the bit offset within that digit, j: [0...W-1]
+        //
+        // The shifted bit of input can be calculated from the result bit with
+        // i' = i - t = (dW + j) - (qW + r) = dW + j - qW - r = (d - q)W + (j - r)
+        //
+        // (j - r) is greatest when j is at max and r is at min, and
+        // the difference is lowest when j is at min and r is at max.
+        // Since 0 <= r < W and 0 <= j < W, it follows:
+        //
+        // max(j - r) = max(j) - min(r) = W - 1 - 0 = W - 1
+        //
+        // min(j - r) = min(j) - max(r) = 0 - (W - 1) = -W + 1
+        //
+        // so, max(i') = (d - q)W + W - 1
+        // and min(i') = (d - q)W - W + 1 = (d - q - 1 + 1)W - W + 1 = (d - q - 1)W + W - W + 1 = (d - q - 1)W + 1
+        //
+        // The digits at (d - q) and (d - q - 1) if looking from most to least significant digit, are ordered as:
+        // (d - q), (d - q - 1)
+        // and the digit edge of input lies inside the digit of output.
+        //
+        // Also, digit (d - q) moved left by `r` bits,
+        // so we need to get its (W - r) lower bits into higher bits of result.
+        // To do this, we shift the digit left by `r` bits.
+        //
+        // Next, digit (d - q - 1) was moved left by `r` bits and they ended up in digit `d`.
+        // So, we need to get higher `r` bits and put them in the lower bits of digit `d`.
+        // To do this, we shift the digit right by (W - r) bits.
+        //
+        // Gluing together both parts with binary OR will give us the digit of the result.
+        //
+        // If at any point (d - q) < 0 or (d - q - 1) < 0 we will use value `0` to pad the result.
         for d in (0..<x.count) {
             let high = a_at(d - q) << r
             let low = a_at(d - q - 1) >> (W - r)
