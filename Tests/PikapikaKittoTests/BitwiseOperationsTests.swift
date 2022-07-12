@@ -299,4 +299,27 @@ class BitwiseOperationsTests: XCTestCase {
         print(util_printDigit(UInt8.max - 1))
         XCTAssertEqual(UInt8.max - 1, 0b1111_1110)
     }
+
+    func test_bitwiseLogic() {
+        let table: [(a: [Digit], b: [Digit], and: [Digit], or: [Digit], xor: [Digit], not: [Digit])] = [
+            (a: [0b0000_0000, 0b0000_0000], b: [0b0000_0000, 0b0000_0000], and: [0b0000_0000, 0b0000_0000], or: [0b0000_0000, 0b0000_0000], xor: [0b0000_0000, 0b0000_0000], not: [0b1111_1111, 0b1111_1111]),
+            (a: [0b0000_0000, 0b0000_0000], b: [0b1111_1111, 0b1111_1111], and: [0b0000_0000, 0b0000_0000], or: [0b1111_1111, 0b1111_1111], xor: [0b1111_1111, 0b1111_1111], not: [0b1111_1111, 0b1111_1111]),
+            (a: [0b1111_1111, 0b1111_1111], b: [0b0000_0000, 0b0000_0000], and: [0b0000_0000, 0b0000_0000], or: [0b1111_1111, 0b1111_1111], xor: [0b1111_1111, 0b1111_1111], not: [0b0000_0000, 0b0000_0000]),
+            (a: [0b1111_1111, 0b1111_1111], b: [0b1111_1111, 0b1111_1111], and: [0b1111_1111, 0b1111_1111], or: [0b1111_1111, 0b1111_1111], xor: [0b0000_0000, 0b0000_0000], not: [0b0000_0000, 0b0000_0000]),
+        ]
+
+        for row in table {
+            let and = bitAND(row.a, row.b)
+            XCTAssertEqual(and, row.and, "\(row.a) & \(row.b)")
+
+            let or = bitOR(row.a, row.b)
+            XCTAssertEqual(or, row.or, "\(row.a) | \(row.b)")
+
+            let xor = bitXOR(row.a, row.b)
+            XCTAssertEqual(xor, row.xor, "\(row.a) ^ \(row.b)")
+
+            let not = bitNOT(row.a)
+            XCTAssertEqual(not, row.not, "~\(row.a)")
+        }
+    }
 }
