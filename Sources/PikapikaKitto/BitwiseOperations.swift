@@ -219,3 +219,100 @@ func bitShiftLeft<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedWi
     }
     return x
 }
+
+
+/// Bitwise AND of muilti-digit numbers a and b
+///
+/// - **Requires**:
+///   - a, b: multiple-digit numbers, with least significant digit at index 0
+///   - `a.count == b.count`
+/// - **Guarantees**:
+///   - result is the same as AND-ing every corresponding bit of both `a` and `b`
+///   - `result.count == a.count == b.count`
+///
+/// - Parameters:
+///   - a: left-hand-side operand
+///   - b: right-hand-side operand
+/// - Returns: bitwise AND of `a` and `b`
+func bitAND<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: FixedWidthInteger & UnsignedInteger {
+    // Given AND, OR, XOR, and NOT operations defiend on single binary digits,
+    // the result of applying those operators to numbers composed of binary digits is the same
+    // as applying them to each of the corresponding digits. In other words,
+    //
+    // If p, q are binary digits, and X(p, q) = s is a bitwise operator defined for p and q,
+    // then X(a, b) = X(a[i], b[i]) = s[i] for i from 0 to a.count, and the resulting number is
+    // the result of bitwise X-ing input numbers.
+    //
+    // That applies to bitwise AND, OR, and XOR operators.
+    //
+    // And
+    //
+    // If v is a binary digit, and Y(v) = u is a bitwise operator defined for v,
+    // then Y(a) = Y(a[i]) = u[i] for i from 0 to a.count, and the resulting number is the
+    // result of bitwise Y-ing input number a.
+    //
+    // That aplies to the bitwise NOT operator.
+
+    (0..<a.count).map { i in a[i] & b[i] }
+        // i ranges from 0 to a.count - 1, and resulting c[i] = a[i] & b[i]
+        // c.count == a.count. Since requirement is a.count == b.count, then c.count == b.count, too.
+}
+
+/// Bitwise OR of muilti-digit numbers a and b
+///
+/// - **Requires**:
+///   - a, b: multiple-digit numbers, with least significant digit at index 0
+///   - `a.count == b.count`
+/// - **Guarantees**:
+///   - result is the same as OR-ing every corresponding bit of both `a` and `b`
+///   - `result.count == a.count == b.count`
+///
+/// - Parameters:
+///   - a: left-hand-side operand
+///   - b: right-hand-side operand
+/// - Returns: bitwise OR of `a` and `b`
+func bitOR<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: FixedWidthInteger & UnsignedInteger {
+    // For details, see the bitAND
+    (0..<a.count).map { i in a[i] | b[i] }
+        // i ranges from 0 to a.count - 1, and resulting c[i] = a[i] | b[i]
+        // c.count == a.count. Since requirement is a.count == b.count, then c.count == b.count, too.
+}
+
+/// Bitwise XOR of muilti-digit numbers a and b
+///
+/// - **Requires**:
+///   - a, b: multiple-digit numbers, with least significant digit at index 0
+///   - `a.count == b.count`
+/// - **Guarantees**:
+///   - result is the same as XOR-ing every corresponding bit of both `a` and `b`
+///   - `result.count == a.count == b.count`
+///
+/// - Parameters:
+///   - a: left-hand-side operand
+///   - b: right-hand-side operand
+/// - Returns: bitwise AND of `a` and `b`
+func bitXOR<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: FixedWidthInteger & UnsignedInteger {
+    // For details, see the bitAND
+    (0..<a.count).map { i in a[i] ^ b[i] }
+    // i ranges from 0 to a.count - 1, and resulting c[i] = a[i] ^ b[i]
+    // c.count == a.count. Since requirement is a.count == b.count, then c.count == b.count, too.
+}
+
+/// Bitwise NOT of muilti-digit number `a`
+///
+/// - **Requires**:
+///   - a: multiple-digit number, with least significant digit at index 0
+/// - **Guarantees**:
+///   - result is the same as NOT-ing every corresponding bit of `a`
+///   - `result.count == a.count`
+///
+/// - Parameters:
+///   - a: left-hand-side operand
+///   - b: right-hand-side operand
+/// - Returns: bitwise AND of `a` and `b`
+func bitNOT<Digit>(_ a: [Digit]) -> [Digit] where Digit: FixedWidthInteger & UnsignedInteger {
+    // For details, see the bitAND
+    (0..<a.count).map { i in ~a[i]}
+        // i ranges from 0 to a.count - 1, and resulting c[i] = ~a[i]
+        // c.count == a.count.
+}
