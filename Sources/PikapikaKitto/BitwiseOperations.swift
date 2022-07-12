@@ -15,8 +15,9 @@ import Foundation
 /// - **Guarantees**:
 ///   - if `t < 0` then result is `bitShiftLeft(a, -t)`
 ///   - if `t == 0` then result is same as input `a`
-///   - if `t >= a.count` then result is number with `a.count` zero digits
-///   - otherwise, the result is a number shifted to the right by `t` bits and padded with 0-bits from left.
+///   - if `t >= a.count * Digit.bitWidth` then the result is a number with `a.count` zero digits
+///   - otherwise, the result is a number `a` shifted to the right by `t` bits and padded with 0-bits from left.
+///   - `result.count == a.count`
 ///
 /// - Parameters:
 ///   - a: multi-digit number
@@ -33,16 +34,17 @@ func bitShiftRight<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedW
     }
     // else t > 0
 
+    let W = Digit.bitWidth
+
     // resulting number
     var x = [Digit](repeating: 0, count: a.count)
 
-    if t >= a.count {
+    if t >= a.count * W {
         // overshift occurred, no bits of a are in the result.
         return x
     }
-    // else t > 0 && t < a.count
+    // else t > 0 && t < a.count * W
 
-    let W = Digit.bitWidth
     let q = t / W
     let r = t % W
     // it follows from above that t == q * W + r
@@ -118,7 +120,7 @@ func bitShiftRight<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedW
 /// - **Guarantees**:
 ///   - if `t < 0` then result is `bitShiftRight(a, -t)`
 ///   - if `t == 0` then result is same as input `a`
-///   - if `t >= a.count` then result is number with `a.count` zero digits
+///   - if `t >= a.count * Digit.bitWidth` then result is number with `a.count` zero digits
 ///   - otherwise, the result is a number shifted to the left by `t` bits and padded with 0-bits from right.
 ///
 /// - Parameters:
@@ -134,16 +136,16 @@ func bitShiftLeft<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedWi
         return bitShiftRight(a, -t)
     }
     // else t > 0
+    let W = Digit.bitWidth
 
     var x = [Digit](repeating: 0, count: a.count)
 
-    if t >= a.count {
+    if t >= a.count * W {
         // overshift occurred, no bits of a are in the result.
         return x
     }
-    // else t > 0 && t < a.count
+    // else t > 0 && t < a.count * W
 
-    let W = Digit.bitWidth
     let q = t / W
     let r = t % W
     // t == q * W + r
@@ -194,9 +196,9 @@ func bitShiftLeft<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedWi
         // so, max(i') = (d - q)W + W - 1
         // and min(i') = (d - q)W - W + 1 = (d - q - 1 + 1)W - W + 1 = (d - q - 1)W + W - W + 1 = (d - q - 1)W + 1
         //
-        // The digits at (d - q) and (d - q - 1) if looking from most to least significant digit, are ordered as:
+        // The digits at (d - q) and (d - q - 1), if looking from most to least significant digit, are ordered as:
         // (d - q), (d - q - 1)
-        // and the digit edge of input lies inside the digit of output.
+        // and the digit edge of input lies inside the digit of result.
         //
         // Also, digit (d - q) moved left by `r` bits,
         // so we need to get its (W - r) lower bits into higher bits of result.
@@ -208,7 +210,7 @@ func bitShiftLeft<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedWi
         //
         // Gluing together both parts with binary OR will give us the digit of the result.
         //
-        // If at any point (d - q) < 0 or (d - q - 1) < 0 we will use value `0` to pad the result.
+        // If, at any digit at offset d, (d - q) < 0 or (d - q - 1) < 0, then we will use value `0` to pad the result.
         for d in (0..<x.count) {
             let high = a_at(d - q) << r
             let low = a_at(d - q - 1) >> (W - r)
