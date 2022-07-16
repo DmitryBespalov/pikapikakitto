@@ -453,3 +453,75 @@ func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: Unsigne
     return p
         // return the p, a product of a and b.
 }
+
+func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where Digit: UnsignedInteger & FixedWidthInteger {
+    // find q
+        // n = floor(ln b)
+            // n is the nearest power of 2 that is less than or equal to b
+            // c = b, n = 0
+            // while c != 1
+                // c >>= 1
+                // n += 1
+            // alternative:
+                // bit width - leading zero count - 1
+
+        // u = a >> n + 1 ( = a/2^n + 1 )
+            // what is su, a sign of (a - ub) = a - b(a/2^n + 1))?
+                // since (ln b) >= n => 2^ln(b) >= 2^n (because 2 > 1) => b >= 2^n
+                // then, for b = 2^n: (a - 2^n(a/2^n + 1) = (a - a - 2^n) => signi is < 0
+                // and for b > 2^n: (a - (2^n + k)*(a/2^n + 1) = a - 2^n a / 2^n - 2^n - k a / 2^n - k = a - a - 2^n - ka/2^n - k < 0
+                // so, a - ub < 0 or su = -1
+
+        // l = a >> (n + 1) ( = a/2^(n+1) )
+            // what is sl, a sign of (a - lb) = a - b(a/2^(n+1)) ?
+                // since 2^n <= b < 2^(n+1)
+                // then b / 2^(n+1) < 1 => a * b / 2^(n+1) < a * 1
+                // then, b * l < a, then a - lb > 0, or sl = +1
+
+        // if bounds (l, u) are 1 or less, then quotient lies between two integers, meaning we found the answer
+        // and the loop below should stop.
+
+        // while u - l > 1
+            // invariant: a - ub < 0 and a - lb > 0 and u - l > 1
+
+            // step 0: sl = +1, su = -1 or (sl, su) is (+1, -1)
+
+            // m = u >> 1 + l >> 1 ( = u/2 + l/2 = floor((u + l)/2) )
+                // since m is in the middle of the interval, and u - l > 1,
+                // then l < m < u
+            // sm = compare(a, mb)
+                // get sign of (a - mb), or sign of a remainder when q = m
+            // sl = compare(a, lb)
+                // get sign of a remainder when q = l
+                // step0: sl = +1
+            // su = compare(a, ub)
+                // get sign of a remainder when q = u
+                // step 0: su = -1
+
+            // if sm == sl
+                // step 0: (sl, sm, su) = (+1, +1, -1), i.e. remainder is 0 between (m and u) => step 1: (+1, -1)
+                // step 1: same logic as in as step 0
+
+                // l = m
+                    // step 0: next internval is (m, u) => (sl, su) = (+1, -1)
+                    // m < u => new l < u
+            // else if sm == su
+                // step 0: (sl, sm, su) = (+1, -1, -1), i.e. remainder is 0 between (l and m) => step 1: (+1, -1)
+                // step 1: same logic as in step 0
+
+                // u = m
+                    // step 0: next interval is (l, m) => (sl, su) = (+1, -1)
+                    // m > l => new u > l
+            // else
+                // step 0: (+1, 0, -1), i.e. remainder is 0 => found q
+                // step 1: same logic as in step 0
+                // return q = m
+        // end loop
+        // return q = l
+            // if u - l == 1, then quotient is between l and u, so we take the integer part only, which is l
+            // if u - l == 0, then quotient == l == u, so we can take l as an answer.
+    // q is found, then find remainder
+    // r = a - bq
+    // return (q, r)
+    ([], [])
+}

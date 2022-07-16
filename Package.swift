@@ -23,9 +23,6 @@ let package = Package(
             dependencies: []),
         .testTarget(
             name: "PikapikaKittoTests",
-            dependencies: ["PikapikaKitto"]),
-        .testTarget(
-            name: "PikapikaKittoSlowTests",
             dependencies: ["PikapikaKitto"])
     ]
 )
