@@ -8,6 +8,82 @@
 import Foundation
 
 
+/// Returns number of leading bits in multiple-digit number.
+///
+/// - **Requires**:
+///   - a: multiple-digit number, lowest digit first (at index 0)
+/// - **Guarantees**:
+///   - Returns number of leading (end of the `a`) bits that are zeroes
+///
+/// - Parameter a: multiple-digit number
+/// - Returns: number of leading zero bits in the `a`
+func numberLeadingZeroBitCount<Digit>(_ a: [Digit]) -> Int where Digit: UnsignedInteger & FixedWidthInteger {
+    // Number a with n digits is represented as a[n-1] a[n-2] ... a[0].
+    // Each digit is itself a binary integer of m bits (m = Digit.bitWidth) b[m-1] b[m-1] ... b[0].
+    // And so, number of leading zero bits for the number a is the same as number of leading zero bits
+    // for all leading digits that equal to 0 plus the leading zero bits of the firts leading digit that is not 0.
+    var count = 0
+    // loop from the highest index to lowest index
+    for i in (0..<a.count).reversed() {
+    // i from a.count-1 to 0
+
+        count += a[i].leadingZeroBitCount
+            // adds number of leading zero bits to the counter
+
+        if a[i] != 0 { break }
+            // if a[i] == 0 then loop will continue to the next index i
+            // else a[i] != 0 then loop will stop at the first (from end) non-zero digit
+    }
+    // end of the loop
+    // `count` contains number of leading zero bits of all leading zero digits plus number of leading zero bits
+    // of the first (from the end) non-zero digit.
+    return count
+        // returned number of leading zero bits
+}
+
+/// Returns the number of trailing bits that are zeroes in a multiple-digit number
+///
+/// - **Requires**:
+///  - a: multiple-digit number, least significant digit at index 0
+/// - **Guarantees**:
+///   - Returns number of trailing (beginning of `a`) bits that are zeroes
+///
+/// - Parameter a: multiple-digit number
+/// - Returns: number of trailing zero bits in the `a`
+func numberTrailingZeroBitCount<Digit>(_ a: [Digit]) -> Int where Digit: UnsignedInteger & FixedWidthInteger {
+    var count = 0
+        // count is 0
+    for i in (0..<a.count) {
+    // i from 0 to a.count - 1
+
+        count += a[i].trailingZeroBitCount
+            // adds number of trailing zero bits in the digit at index i
+
+        if a[i] != 0 { break }
+            // if a[i] is 0 then loop will continue, and count will contain number of zero bits in 0 digit (bit width)
+            // else if a[i] is not 0, then loop will stop at the first (from start) non-zero digit
+    }
+    // end of the loop
+    // `count` contains number of 'trailing' zeroes for all zero-digits from the least significant end
+    // plus the number of trailing zero bits of the first non-zero digit.
+    return count
+        // returned number of trailing zero bits
+}
+
+
+/// Returns number of bits in the multiple-digit number
+///
+/// - **Requires**:
+///  - a: multiple-digit number
+/// - **Guarantees**:
+///  - result is number of digits in `a`
+///
+/// - Parameter a: multiple-digit number
+/// - Returns: total number of bits in the number
+func numberBitWidth<Digit>(_ a: [Digit]) -> Int where Digit: UnsignedInteger & FixedWidthInteger {
+    a.count * Digit.bitWidth
+}
+
 /// Shifts the digit `a` by `t` bits to the right with 0-padding from the left.
 ///
 /// - **Requires**:
@@ -39,7 +115,7 @@ func bitShiftRight<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedW
     // resulting number
     var x = [Digit](repeating: 0, count: a.count)
 
-    if t >= a.count * W {
+    if t >= numberBitWidth(a) {
         // overshift occurred, no bits of a are in the result.
         return x
     }
@@ -140,7 +216,7 @@ func bitShiftLeft<Digit>(_ a: [Digit], _ t: Int) -> [Digit] where Digit: FixedWi
 
     var x = [Digit](repeating: 0, count: a.count)
 
-    if t >= a.count * W {
+    if t >= numberBitWidth(a) {
         // overshift occurred, no bits of a are in the result.
         return x
     }

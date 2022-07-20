@@ -322,4 +322,67 @@ class BitwiseOperationsTests: XCTestCase {
             XCTAssertEqual(not, row.not, "~\(row.a)")
         }
     }
+
+    func test_numberBitWidth() {
+        // a.count == 0
+        XCTAssertEqual( numberBitWidth( [ UInt8 ]() ), 0 )
+        // a.count == 1
+        XCTAssertEqual( numberBitWidth( [ UInt8(1) ] ), 8 )
+        // a.count == 2
+        XCTAssertEqual( numberBitWidth( [ UInt8(1), UInt8(1) ] ), 16 )
+        // a.count == 5
+        XCTAssertEqual( numberBitWidth( [ UInt8(1), UInt8(1), UInt8(1), UInt8(1), UInt8(1) ] ), 40 )
+
+        // a.count == 2, Digit.bitWidth == 32
+        XCTAssertEqual( numberBitWidth( [ UInt32(1), UInt32(1) ] ), 64 )
+
+        // a.count == 2, Digit.bitWidth == 64
+        XCTAssertEqual( numberBitWidth( [ UInt64(1), UInt64(1) ] ), 128 )
+    }
+
+    func test_numberOfLeadingZeroes() {
+        // 0
+        XCTAssertEqual( numberLeadingZeroBitCount( [ UInt8.max, UInt8.max, UInt8.max ] ), 0 )
+
+        // 1
+        XCTAssertEqual( numberLeadingZeroBitCount( [ UInt8.max, UInt8.max, (UInt8.max >> 1) ] ), 1 )
+
+        // half digit zeroes
+        XCTAssertEqual( numberLeadingZeroBitCount( [ UInt8.max, UInt8.max, (UInt8.max >> 4) ] ), 4 )
+
+        // full digit
+        XCTAssertEqual( numberLeadingZeroBitCount( [ UInt8.max, UInt8.max, 0 ] ), 8 )
+
+        // full digit + 1
+        XCTAssertEqual( numberLeadingZeroBitCount( [ UInt8.max, (UInt8.max >> 1), 0 ] ), 9 )
+
+        // full number - 1
+        XCTAssertEqual( numberLeadingZeroBitCount( [ UInt8(1), 0, 0 ] ), 23 )
+
+        // full number
+        XCTAssertEqual( numberLeadingZeroBitCount( [ UInt8(0), 0, 0 ] ), 24 )
+    }
+
+    func test_numberOfTrailingZeroes() {
+        // 0
+        XCTAssertEqual( numberTrailingZeroBitCount( [ UInt8(1), 0, 0 ] ), 0 )
+
+        // 1
+        XCTAssertEqual( numberTrailingZeroBitCount( [ (UInt8(1) << 1), 0, 0 ] ), 1 )
+
+        // half digit zeroes
+        XCTAssertEqual( numberTrailingZeroBitCount( [ (UInt8.max << 4), 0, 0 ] ), 4 )
+
+        // full digit
+        XCTAssertEqual( numberTrailingZeroBitCount( [ UInt8(0), 1, 0 ] ), 8 )
+
+        // full digit + 1
+        XCTAssertEqual( numberTrailingZeroBitCount( [ UInt8(0), (1 << 1), 0 ] ), 9 )
+
+        // full number - 1
+        XCTAssertEqual( numberTrailingZeroBitCount( [ UInt8(0), 0, (1 << 7) ] ), 23 )
+
+        // full number
+        XCTAssertEqual( numberTrailingZeroBitCount( [ UInt8(0), 0, 0 ] ), 24 )
+    }
 }

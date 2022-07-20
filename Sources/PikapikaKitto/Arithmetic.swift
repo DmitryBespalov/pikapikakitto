@@ -455,73 +455,152 @@ func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: Unsigne
 }
 
 func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where Digit: UnsignedInteger & FixedWidthInteger {
+    // TODO: handle b == 1
+    // TODO: handle b == 0
+    // TODO: handle a < b
+    // TODO: handle a == b
+
     // find q
         // n = floor(ln b)
-            // n is the nearest power of 2 that is less than or equal to b
-            // c = b, n = 0
-            // while c != 1
-                // c >>= 1
-                // n += 1
-            // alternative:
-                // bit width - leading zero count - 1
+        // n is the exponent of the nearest power of 2 that is less than or equal to b
+            // Consider a binary number 0001_0001. It's bit width is 8 bits. It's most significant "1" bit is
+            // at index 5. That bit is equivalent to the power of two 2^4, since the 1st bit is for the 2^0 coefficient.
+            //
+            // So, to get the nearest lower power of two's exponent, we subtract number of leading zeroes from
+            // the bit width and reduce by 1 to get the 2's exponent.
+            //
+            // The lowest value of b with value's bit width B is just 2^(B-1). The highest b is (2^B - 1).
+            //
+            // By definition, 2^n <= b
+    let n = numberBitWidth(b) - numberLeadingZeroBitCount(b) - 1
+        // n == 0 when b == 1, but that case is handled already.
+        // n < 0 when b == 0, but that case is handled already.
+        // so, n > 0 and at least 1.
 
-        // u = a >> n + 1 ( = a/2^n + 1 )
-            // what is su, a sign of (a - ub) = a - b(a/2^n + 1))?
-                // since (ln b) >= n => 2^ln(b) >= 2^n (because 2 > 1) => b >= 2^n
-                // then, for b = 2^n: (a - 2^n(a/2^n + 1) = (a - a - 2^n) => signi is < 0
-                // and for b > 2^n: (a - (2^n + k)*(a/2^n + 1) = a - 2^n a / 2^n - 2^n - k a / 2^n - k = a - a - 2^n - ka/2^n - k < 0
-                // so, a - ub < 0 or su = -1
 
-        // l = a >> (n + 1) ( = a/2^(n+1) )
-            // what is sl, a sign of (a - lb) = a - b(a/2^(n+1)) ?
-                // since 2^n <= b < 2^(n+1)
-                // then b / 2^(n+1) < 1 => a * b / 2^(n+1) < a * 1
-                // then, b * l < a, then a - lb > 0, or sl = +1
+    let one = padRight( [ Digit(1) ], a.count )
+        // one is a number with least significant digit equal to 1, others are 0 digits. OK.
 
-        // if bounds (l, u) are 1 or less, then quotient lies between two integers, meaning we found the answer
-        // and the loop below should stop.
+    // u = (a >> n) + 1  = a/2^n + 1
+        // what is su, a sign of (a - ub) = a - b(a/2^n + 1))?
+            // since (ln b) >= n => 2^ln(b) >= 2^n (because 2 > 1) => b >= 2^n
+            // then, for b = 2^n: (a - 2^n(a/2^n + 1) = (a - a - 2^n) => signi is < 0
+            // and for b > 2^n: (a - (2^n + k)*(a/2^n + 1) = a - 2^n a / 2^n - 2^n - k a / 2^n - k = a - a - 2^n - ka/2^n - k < 0
+            // so, a - ub < 0 or su = -1
+    var u = sum( bitShiftRight(a, n), one ).result
+        // one.count == a.count is true
+        // bitShiftRight(a, n).count == a.count
+            // If number of bits in the value of a is less or equal to n, then value can be 0.
+                // In other words, a <= 2^n-1. But 2^n <= b, then a < b.
+                // But that case is handled already and not possible here.
+            // If number of bits in value of a is greater than n, then after shifting right, a > 0.
+            // so, the resulting value is greater than 0.
 
-        // while u - l > 1
-            // invariant: a - ub < 0 and a - lb > 0 and u - l > 1
+        // sum will not overflow.
+            // sum can overflow iff (a >> n) == max number
+            // is true when a == max number and n == 0, which is true when b == 1. That case is handled already.
+            // Since any number shifted right by n positions is equivalent by dividing by 2^n,
+            // therefore sum can overflow if a == max number * 2^n, which is greater than max number possible.
+            // Therefore, this sum will not overflow.
+        // Now, u is (a >> n) + 1
+            // since (a >> n) > 0, then u > 1
+        // u.count == a.count == one.count
 
-            // step 0: sl = +1, su = -1 or (sl, su) is (+1, -1)
 
-            // m = u >> 1 + l >> 1 ( = u/2 + l/2 = floor((u + l)/2) )
-                // since m is in the middle of the interval, and u - l > 1,
-                // then l < m < u
-            // sm = compare(a, mb)
-                // get sign of (a - mb), or sign of a remainder when q = m
-            // sl = compare(a, lb)
-                // get sign of a remainder when q = l
-                // step0: sl = +1
-            // su = compare(a, ub)
-                // get sign of a remainder when q = u
-                // step 0: su = -1
 
-            // if sm == sl
+    // l = a >> (n + 1) ( = a/2^(n+1) )
+        // what is sl, a sign of (a - lb) = a - b(a/2^(n+1)) ?
+            // since 2^n <= b < 2^(n+1)
+            // then b / 2^(n+1) < 1 => a * b / 2^(n+1) < a * 1
+            // then, b * l < a, then a - lb > 0, or sl = +1
+    var l = bitShiftRight(a, n + 1)
+        // Number of bits in the value of a is greater than n.
+            // Can it be exactly n + 1?
+            // i.e. if a is 001100 and it has 4 bits, then 4 = n + 1, then 3 = n
+            // but 2^3 == 001000 and 2^4 = 010000, and a > 2^3 but less than 2^4.
+            // If a would be 2^4 then the n + 1 would be 5 and we would have a contradiction.
+            // so, 2^n <= a < 2^(n + 1)
+            // but if that's the case, then 2^n <= b or 2^3 <= b and b < 2^(n + 1).
+            // For example, b can be 001010 which is less than a, but satisfies the constrains.
+            // So, it is possible that `a` shifted right by (n + 1) bits would be 0.
+        // Therefore, shifting right by n + 1 makes value l >= 0 and less than u
+        // u.count == a.count
+
+    var q: [Digit] = []
+        // q.count == 0
+
+    // if bounds (l, u) are differ by 1, then the quotient lies between them, meaning we found the answer
+    // and the loop below should stop. If bounds differ by 0, then the same, we found the quotient.
+    // Until that time we will reduce bounds such that the quotient still lies between them.
+
+    let GREATER_THAN: Digit = 1
+
+    #warning("continue here")
+
+    // while u - l > 1
+    while compare( subtract(u, l).result, one ) == GREATER_THAN {
+        // loop invariant: a - ub < 0 and a - lb > 0 and u - l > 1
+        // step 0: u > l + 1
+
+        // step 0: sl = +1, su = -1 or (sl, su) is (+1, -1)
+
+        // m = u >> 1 + l >> 1 ( = u/2 + l/2 = floor((u + l)/2) )
+            // since m is in the middle of the interval, and u - l > 1,
+            // then l < m < u
+        let m = sum( bitShiftRight(u, 1), bitShiftRight(l, 1) ).result
+
+        // sm = compare(a, mb)
+            // get sign of (a - mb), or sign of a remainder when q = m
+        let sm = compare(a, multiply(m, b))
+
+        // sl = compare(a, lb)
+            // get sign of a remainder when q = l
+            // step0: sl = +1
+        let sl = compare(a, multiply(l, b))
+
+        // su = compare(a, ub)
+            // get sign of a remainder when q = u
+            // step 0: su = -1
+        let su = compare(a, multiply(u, b))
+
+        if sm == sl {
                 // step 0: (sl, sm, su) = (+1, +1, -1), i.e. remainder is 0 between (m and u) => step 1: (+1, -1)
                 // step 1: same logic as in as step 0
 
                 // l = m
                     // step 0: next internval is (m, u) => (sl, su) = (+1, -1)
                     // m < u => new l < u
-            // else if sm == su
+            l = m
+
+        } else if sm == su {
                 // step 0: (sl, sm, su) = (+1, -1, -1), i.e. remainder is 0 between (l and m) => step 1: (+1, -1)
                 // step 1: same logic as in step 0
 
                 // u = m
                     // step 0: next interval is (l, m) => (sl, su) = (+1, -1)
                     // m > l => new u > l
-            // else
+            u = m
+
+        } else {
+        // else sm != sl && sm != su
+
                 // step 0: (+1, 0, -1), i.e. remainder is 0 => found q
                 // step 1: same logic as in step 0
                 // return q = m
-        // end loop
+            q = m
+            break
+        }
+    } // end loop
         // return q = l
             // if u - l == 1, then quotient is between l and u, so we take the integer part only, which is l
             // if u - l == 0, then quotient == l == u, so we can take l as an answer.
+    if q.isEmpty {
+        q = l
+    }
+
     // q is found, then find remainder
     // r = a - bq
+    let r = subtract(a, multiply(b, q)).result
     // return (q, r)
-    ([], [])
+    return (q, r)
 }
