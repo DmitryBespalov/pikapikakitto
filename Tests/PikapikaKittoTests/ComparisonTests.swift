@@ -12,96 +12,94 @@ class ComparisonTests: XCTestCase {
     typealias Digit = UInt8
 
     func test_compare() {
-        // util_generateTable_compare()
+        util_generateTable_compare()
 
-        let table: [[Digit]] = [
-            [ 0,   0,   0,   0,   0,    ],
-            [ 0,   0,   1,   0,   255,  ],
-            [ 0,   1,   0,   1,   0,    ],
-            [ 0,   1,   1,   1,   255,  ],
-            [ 0,   1,   255, 0,   1,    ],
-            [ 0,   127, 0,   127, 0,    ],
-            [ 0,   127, 1,   127, 255,  ],
-            [ 0,   127, 255, 126, 1,    ],
-            [ 0,   254, 0,   254, 0,    ],
-            [ 0,   254, 1,   254, 255,  ],
-            [ 0,   254, 255, 253, 1,    ],
-            [ 0,   255, 0,   255, 0,    ],
-            [ 0,   255, 1,   255, 255,  ],
-            [ 0,   255, 255, 254, 1,    ],
-            [ 1,   0,   1,   0,   0,    ],
-            [ 1,   0,   2,   0,   255,  ],
-            [ 1,   0,   0,   0,   1,    ],
-            [ 1,   1,   1,   1,   0,    ],
-            [ 1,   1,   2,   1,   255,  ],
-            [ 1,   1,   0,   1,   1,    ],
-            [ 1,   127, 1,   127, 0,    ],
-            [ 1,   127, 2,   127, 255,  ],
-            [ 1,   127, 0,   127, 1,    ],
-            [ 1,   254, 1,   254, 0,    ],
-            [ 1,   254, 2,   254, 255,  ],
-            [ 1,   254, 0,   254, 1,    ],
-            [ 1,   255, 1,   255, 0,    ],
-            [ 1,   255, 2,   255, 255,  ],
-            [ 1,   255, 0,   255, 1,    ],
-            [ 127, 0,   127, 0,   0,    ],
-            [ 127, 0,   128, 0,   255,  ],
-            [ 127, 0,   126, 0,   1,    ],
-            [ 127, 1,   127, 1,   0,    ],
-            [ 127, 1,   128, 1,   255,  ],
-            [ 127, 1,   126, 1,   1,    ],
-            [ 127, 127, 127, 127, 0,    ],
-            [ 127, 127, 128, 127, 255,  ],
-            [ 127, 127, 126, 127, 1,    ],
-            [ 127, 254, 127, 254, 0,    ],
-            [ 127, 254, 128, 254, 255,  ],
-            [ 127, 254, 126, 254, 1,    ],
-            [ 127, 255, 127, 255, 0,    ],
-            [ 127, 255, 128, 255, 255,  ],
-            [ 127, 255, 126, 255, 1,    ],
-            [ 254, 0,   254, 0,   0,    ],
-            [ 254, 0,   255, 0,   255,  ],
-            [ 254, 0,   253, 0,   1,    ],
-            [ 254, 1,   254, 1,   0,    ],
-            [ 254, 1,   255, 1,   255,  ],
-            [ 254, 1,   253, 1,   1,    ],
-            [ 254, 127, 254, 127, 0,    ],
-            [ 254, 127, 255, 127, 255,  ],
-            [ 254, 127, 253, 127, 1,    ],
-            [ 254, 254, 254, 254, 0,    ],
-            [ 254, 254, 255, 254, 255,  ],
-            [ 254, 254, 253, 254, 1,    ],
-            [ 254, 255, 254, 255, 0,    ],
-            [ 254, 255, 255, 255, 255,  ],
-            [ 254, 255, 253, 255, 1,    ],
-            [ 255, 0,   255, 0,   0,    ],
-            [ 255, 0,   0,   1,   255,  ],
-            [ 255, 0,   254, 0,   1,    ],
-            [ 255, 1,   255, 1,   0,    ],
-            [ 255, 1,   0,   2,   255,  ],
-            [ 255, 1,   254, 1,   1,    ],
-            [ 255, 127, 255, 127, 0,    ],
-            [ 255, 127, 0,   128, 255,  ],
-            [ 255, 127, 254, 127, 1,    ],
-            [ 255, 254, 255, 254, 0,    ],
-            [ 255, 254, 0,   255, 255,  ],
-            [ 255, 254, 254, 254, 1,    ],
-            [ 255, 255, 255, 255, 0,    ],
-            [ 255, 255, 254, 255, 1,    ],
+        let table: [(a: [Digit], b: [Digit], result: Int)] = [
+            (a: [0, 0], b: [0, 0], result: EQUAL),
+            (a: [0, 0], b: [1, 0], result: LESS_THAN),
+            (a: [0, 1], b: [0, 1], result: EQUAL),
+            (a: [0, 1], b: [1, 1], result: LESS_THAN),
+            (a: [0, 1], b: [255, 0], result: GREATER_THAN),
+            (a: [0, 127], b: [0, 127], result: EQUAL),
+            (a: [0, 127], b: [1, 127], result: LESS_THAN),
+            (a: [0, 127], b: [255, 126], result: GREATER_THAN),
+            (a: [0, 254], b: [0, 254], result: EQUAL),
+            (a: [0, 254], b: [1, 254], result: LESS_THAN),
+            (a: [0, 254], b: [255, 253], result: GREATER_THAN),
+            (a: [0, 255], b: [0, 255], result: EQUAL),
+            (a: [0, 255], b: [1, 255], result: LESS_THAN),
+            (a: [0, 255], b: [255, 254], result: GREATER_THAN),
+            (a: [1, 0], b: [1, 0], result: EQUAL),
+            (a: [1, 0], b: [2, 0], result: LESS_THAN),
+            (a: [1, 0], b: [0, 0], result: GREATER_THAN),
+            (a: [1, 1], b: [1, 1], result: EQUAL),
+            (a: [1, 1], b: [2, 1], result: LESS_THAN),
+            (a: [1, 1], b: [0, 1], result: GREATER_THAN),
+            (a: [1, 127], b: [1, 127], result: EQUAL),
+            (a: [1, 127], b: [2, 127], result: LESS_THAN),
+            (a: [1, 127], b: [0, 127], result: GREATER_THAN),
+            (a: [1, 254], b: [1, 254], result: EQUAL),
+            (a: [1, 254], b: [2, 254], result: LESS_THAN),
+            (a: [1, 254], b: [0, 254], result: GREATER_THAN),
+            (a: [1, 255], b: [1, 255], result: EQUAL),
+            (a: [1, 255], b: [2, 255], result: LESS_THAN),
+            (a: [1, 255], b: [0, 255], result: GREATER_THAN),
+            (a: [127, 0], b: [127, 0], result: EQUAL),
+            (a: [127, 0], b: [128, 0], result: LESS_THAN),
+            (a: [127, 0], b: [126, 0], result: GREATER_THAN),
+            (a: [127, 1], b: [127, 1], result: EQUAL),
+            (a: [127, 1], b: [128, 1], result: LESS_THAN),
+            (a: [127, 1], b: [126, 1], result: GREATER_THAN),
+            (a: [127, 127], b: [127, 127], result: EQUAL),
+            (a: [127, 127], b: [128, 127], result: LESS_THAN),
+            (a: [127, 127], b: [126, 127], result: GREATER_THAN),
+            (a: [127, 254], b: [127, 254], result: EQUAL),
+            (a: [127, 254], b: [128, 254], result: LESS_THAN),
+            (a: [127, 254], b: [126, 254], result: GREATER_THAN),
+            (a: [127, 255], b: [127, 255], result: EQUAL),
+            (a: [127, 255], b: [128, 255], result: LESS_THAN),
+            (a: [127, 255], b: [126, 255], result: GREATER_THAN),
+            (a: [254, 0], b: [254, 0], result: EQUAL),
+            (a: [254, 0], b: [255, 0], result: LESS_THAN),
+            (a: [254, 0], b: [253, 0], result: GREATER_THAN),
+            (a: [254, 1], b: [254, 1], result: EQUAL),
+            (a: [254, 1], b: [255, 1], result: LESS_THAN),
+            (a: [254, 1], b: [253, 1], result: GREATER_THAN),
+            (a: [254, 127], b: [254, 127], result: EQUAL),
+            (a: [254, 127], b: [255, 127], result: LESS_THAN),
+            (a: [254, 127], b: [253, 127], result: GREATER_THAN),
+            (a: [254, 254], b: [254, 254], result: EQUAL),
+            (a: [254, 254], b: [255, 254], result: LESS_THAN),
+            (a: [254, 254], b: [253, 254], result: GREATER_THAN),
+            (a: [254, 255], b: [254, 255], result: EQUAL),
+            (a: [254, 255], b: [255, 255], result: LESS_THAN),
+            (a: [254, 255], b: [253, 255], result: GREATER_THAN),
+            (a: [255, 0], b: [255, 0], result: EQUAL),
+            (a: [255, 0], b: [0, 1], result: LESS_THAN),
+            (a: [255, 0], b: [254, 0], result: GREATER_THAN),
+            (a: [255, 1], b: [255, 1], result: EQUAL),
+            (a: [255, 1], b: [0, 2], result: LESS_THAN),
+            (a: [255, 1], b: [254, 1], result: GREATER_THAN),
+            (a: [255, 127], b: [255, 127], result: EQUAL),
+            (a: [255, 127], b: [0, 128], result: LESS_THAN),
+            (a: [255, 127], b: [254, 127], result: GREATER_THAN),
+            (a: [255, 254], b: [255, 254], result: EQUAL),
+            (a: [255, 254], b: [0, 255], result: LESS_THAN),
+            (a: [255, 254], b: [254, 254], result: GREATER_THAN),
+            (a: [255, 255], b: [255, 255], result: EQUAL),
+            (a: [255, 255], b: [254, 255], result: GREATER_THAN),
         ]
 
         for row in table {
-            let a = [row[0], row[1]]
-            let b = [row[2], row[3]]
-            let expected = row[4]
-            let result = compare(a, b)
-            XCTAssertEqual(result, expected, "\(a) compare \(b)")
+            let expected = row.result
+            let result = compare(row.a, row.b)
+            XCTAssertEqual(result, expected, "\(row.a) compare \(row.b)")
         }
     }
 
     func util_generateTable_compare() {
         let S: [Digit] = [0, 1, 127, 254, 255]
-        var table: [[Digit]] = []
+        var table: [(a: [Digit], b: [Digit], result: Int)] = []
 
         for a0 in S {
             for a1 in S {
@@ -111,23 +109,23 @@ class ComparisonTests: XCTestCase {
                 let b1: (UInt16) -> UInt8 = { b in UInt8(b >> 8) }
 
                 // a = b
-                table.append([a0, a1, b0(a), b1(a), 0])
+                table.append(([a0, a1], [b0(a), b1(a)], EQUAL))
 
                 // a < b: a + 1 = b
                 if a < UInt16.max {
-                    table.append([a0, a1, b0(a + 1), b1(a + 1), Digit.max])
+                    table.append(([a0, a1], [b0(a + 1), b1(a + 1)], LESS_THAN))
                 }
 
                 // a > b: a - 1 = b
                 if a > 0 {
-                    table.append([a0, a1, b0(a - 1), b1(a - 1), 1])
+                    table.append(([a0, a1], [b0(a - 1), b1(a - 1)], GREATER_THAN))
                 }
             }
         }
 
         for row in table {
-            let line = row.map { "\($0),".padding(toLength: 5, withPad: " ", startingAt: 0) }.joined()
-            print("[ \(line) ],")
+            let result = row.result == EQUAL ? "EQUAL" : (row.result == LESS_THAN ? "LESS_THAN" : "GREATER_THAN")
+            print("(a: \(row.a), b: \(row.b), result: \(result)),")
         }
     }
 

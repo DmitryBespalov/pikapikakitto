@@ -351,6 +351,23 @@ func padRight<Digit>(_ a: [Digit], _ size: Int) -> [Digit] where Digit: Unsigned
     return result
 }
 
+/// Returns multiple-digit number `a` truncated to `size` digits from the most significant digits (end of array).
+///
+/// - **Requires**:
+///  - `a`: multiple-digit number
+///  - `0 < size < a.count`
+/// - **Guarantees**:
+///  - `result.count == size`
+///  - `result[0..<size] == a[0..<size]`
+///
+/// - Parameters:
+///   - a: multilple-digit number
+///   - size: size to which to truncate
+/// - Returns: truncated result.
+func truncateRight<Digit>(_ a: [Digit], _ size: Int) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
+    Array(a[0..<size])
+}
+
 /// Multiplies two numbers together, full-width.
 ///
 /// - **Requires**:
@@ -454,13 +471,69 @@ func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: Unsigne
         // return the p, a product of a and b.
 }
 
+/// Full-width division of a by b, returning quotient and remainder.
+///
+/// - **Requires**:
+///  - `a, b`: multiple-digit numbers
+///  - `a.count == b.count * 2`
+///  - `a.count % 2 == 0` (a.count is even)
+///  - `b != 0`
+/// - **Guarantees**:
+///  - `result.q.count == result.r.count == b.count == a.count / 2`
+///  - `result.q` is an integer quotient of a division a / b
+///  - `result.r` is an integer remainder of a division a / b
+///
+/// - Parameters:
+///   - a: multilpe-digit dividend
+///   - b: multiple-digit divisor
+/// - Returns: quotient and remainder of a / b
 func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where Digit: UnsignedInteger & FixedWidthInteger {
-    // TODO: handle b == 1
-    // TODO: handle b == 0
-    // TODO: handle a < b
-    // TODO: handle a == b
+
+    // if b == 1 then q = a and r = 0
+    if numbersEqual( b, padRight( [Digit(1)], b.count ) ) {
+        let q = truncateRight(a, b.count)
+            // q.count == a.count
+        let r = [Digit](repeating: 0, count: b.count)
+            // r.count == b.count, r[i] == 0
+        return (q, r)
+    }
+    // else b != 1
+
+    if numbersEqual( b, [Digit](repeating: 0, count: b.count) ) {
+        preconditionFailure("Division by zero")
+            // will stop the program
+    }
+    // else b != 0
+
+    let aComparedB = compare( a, padRight(b, a.count) )
+    if aComparedB == LESS_THAN {
+        // if a < b then quotient a / b = 0 and a is a remainder r
+
+        let q = [Digit](repeating: 0, count: b.count)
+            // q.count == b.count, q[i] == 0
+        let r = truncateRight(a, b.count)
+            // r.count == b.count
+        return (q, r)
+    } else if aComparedB == EQUAL {
+        // if a == b, then quotient q = a / b == 1 and remainder r == 0
+
+        let q = padRight([Digit(1)], b.count)
+            // q.count == b.count, q[0] == 1, q[1..<b.count] == 0
+        let r = [Digit](repeating: 0, count: b.count)
+            // r.count == b.count, r[i] == 0
+        return (q, r)
+    }
+    // else a > b
 
     // find q
+        // we will find quotient q by working with the inverse of the division:
+        //      a / b = q + r / b  => r = a - qb
+        // we will find two integers, l and u, such that l < a/b < u and (u - l) <= 1
+        // in other words, we'll find the integer interval where the quotient lies.
+        //
+        // we will do that by estimating where the actual quotient lies initially, based on
+        // the value of a divided by a power of 2. See below.
+
         // n = floor(ln b)
         // n is the exponent of the nearest power of 2 that is less than or equal to b
             // Consider a binary number 0001_0001. It's bit width is 8 bits. It's most significant "1" bit is
@@ -482,7 +555,7 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
         // one is a number with least significant digit equal to 1, others are 0 digits. OK.
 
     // u = (a >> n) + 1  = a/2^n + 1
-        // what is su, a sign of (a - ub) = a - b(a/2^n + 1))?
+        // (i). what is su, a sign of (a - ub) = a - b(a/2^n + 1))?
             // since (ln b) >= n => 2^ln(b) >= 2^n (because 2 > 1) => b >= 2^n
             // then, for b = 2^n: (a - 2^n(a/2^n + 1) = (a - a - 2^n) => signi is < 0
             // and for b > 2^n: (a - (2^n + k)*(a/2^n + 1) = a - 2^n a / 2^n - 2^n - k a / 2^n - k = a - a - 2^n - ka/2^n - k < 0
@@ -509,7 +582,7 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
 
 
     // l = a >> (n + 1) ( = a/2^(n+1) )
-        // what is sl, a sign of (a - lb) = a - b(a/2^(n+1)) ?
+        // (ii). what is sl, a sign of (a - lb) = a - b(a/2^(n+1)) ?
             // since 2^n <= b < 2^(n+1)
             // then b / 2^(n+1) < 1 => a * b / 2^(n+1) < a * 1
             // then, b * l < a, then a - lb > 0, or sl = +1
@@ -524,7 +597,7 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
             // For example, b can be 001010 which is less than a, but satisfies the constrains.
             // So, it is possible that `a` shifted right by (n + 1) bits would be 0.
         // Therefore, shifting right by n + 1 makes value l >= 0 and less than u
-        // u.count == a.count
+        // l.count == a.count
 
     var q: [Digit] = []
         // q.count == 0
@@ -533,74 +606,101 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
     // and the loop below should stop. If bounds differ by 0, then the same, we found the quotient.
     // Until that time we will reduce bounds such that the quotient still lies between them.
 
-    let GREATER_THAN: Digit = 1
-
-    #warning("continue here")
 
     // while u - l > 1
     while compare( subtract(u, l).result, one ) == GREATER_THAN {
-        // loop invariant: a - ub < 0 and a - lb > 0 and u - l > 1
-        // step 0: u > l + 1
+        // loop invariant: (i): a - ub < 0 and (ii): a - lb > 0 and u - l > 1
+        // step 0: u - l > 1 => u > l + 1
 
-        // step 0: sl = +1, su = -1 or (sl, su) is (+1, -1)
-
-        // m = u >> 1 + l >> 1 ( = u/2 + l/2 = floor((u + l)/2) )
+        // m = u >> 1 + l >> 1 = u/2 + l/2 = floor( (u + l) / 2) )
             // since m is in the middle of the interval, and u - l > 1,
             // then l < m < u
         let m = sum( bitShiftRight(u, 1), bitShiftRight(l, 1) ).result
+            // can both of them go to zero as a result of shift?
+                // then they have to be equal to 1 both, meaning u == l, which is not possible here.
+            // bitShiftRight(u, 1).count == u.count
+            // bitShiftRight(l, 1).count == l.count
+            // u.count == l.count == a.count
+            // so, m.count == sum.result.count == a.count
 
         // sm = compare(a, mb)
             // get sign of (a - mb), or sign of a remainder when q = m
-        let sm = compare(a, multiply(m, b))
+        let sm = compare( padRight( a, a.count * 2 ), multiply( m, padRight(b, m.count) ) )
+            // note, that we have to pad everything to 2*a.count because multiplying m by b would be double-width number.
+            // requirements:
+                // compare.left.count == a.count * 2
+                // compare.right.count == multiply.count == m.count * 2 == a.count * 2
+            // satisfied, so compare will have both numbers compared.
+
 
         // sl = compare(a, lb)
-            // get sign of a remainder when q = l
-            // step0: sl = +1
-        let sl = compare(a, multiply(l, b))
+            // get sign of (a - lb), or a remainder when q = l
+            // step0: sl = +1 (see (i).)
+        let sl = compare( padRight(a, a.count * 2), multiply( l, padRight(b, l.count) ) )
+            // compare.left.count == a.count * 2
+            // compare.right.count == l.count * 2 == a.count * 2
+            // compare will have both numbers compared.
 
         // su = compare(a, ub)
             // get sign of a remainder when q = u
-            // step 0: su = -1
-        let su = compare(a, multiply(u, b))
+            // step 0: su = -1 (see (ii).)
+        let su = compare( padRight(a, a.count * 2), multiply( u, padRight(b, u.count) ) )
+            // compare.left.count == a.count * 2
+            // compare.right.count == u.count * 2 == a.count * 2
+
+        // step 0: sl = +1, su = -1 or (sl, su) is (+1, -1)
 
         if sm == sl {
-                // step 0: (sl, sm, su) = (+1, +1, -1), i.e. remainder is 0 between (m and u) => step 1: (+1, -1)
-                // step 1: same logic as in as step 0
+            // step 0: (sl, sm, su) = (+1, +1, -1), i.e. remainder equals 0 between (m and u) => step 1: (+1, -1)
+            // step 1: same logic as in as step 0
 
-                // l = m
-                    // step 0: next internval is (m, u) => (sl, su) = (+1, -1)
-                    // m < u => new l < u
+            // step 0: next internval is (m, u) => (sl, su) = (+1, -1)
+            // m < u => new l < u
             l = m
 
         } else if sm == su {
-                // step 0: (sl, sm, su) = (+1, -1, -1), i.e. remainder is 0 between (l and m) => step 1: (+1, -1)
-                // step 1: same logic as in step 0
+            // step 0: (sl, sm, su) = (+1, -1, -1), i.e. remainder is 0 between (l and m) => step 1: (+1, -1)
+            // step 1: same logic as in step 0
 
-                // u = m
-                    // step 0: next interval is (l, m) => (sl, su) = (+1, -1)
-                    // m > l => new u > l
+            // step 0: next interval is (l, m) => (sl, su) = (+1, -1)
+            // m > l => new u > l
             u = m
 
         } else {
         // else sm != sl && sm != su
+            // since sl is +1 and su is -1, then the only other option is sm == 0,
+            // i.e. we found an integer quotient.
 
-                // step 0: (+1, 0, -1), i.e. remainder is 0 => found q
-                // step 1: same logic as in step 0
-                // return q = m
+            // step 0: (+1, 0, -1), i.e. remainder is 0 => found q
+            // step 1: same logic as if occurred at step 0
+
+            // exit loop with q = m
             q = m
+                // q assigned only once while in the loop.
+                // q.count == m.count == a.count
             break
         }
     } // end loop
-        // return q = l
+    if q.isEmpty {
+        // q.isEmpty true iff it was not assigned a value in the loop.
+        // if loop has ended with (u - l) <= 1, then we take the `l` as a closest integer quotient.
             // if u - l == 1, then quotient is between l and u, so we take the integer part only, which is l
             // if u - l == 0, then quotient == l == u, so we can take l as an answer.
-    if q.isEmpty {
         q = l
+            // q.count == l.count == a.count
     }
 
-    // q is found, then find remainder
+    // q is found, now find remainder
     // r = a - bq
-    let r = subtract(a, multiply(b, q)).result
+    let r = subtract( padRight(a, a.count * 2), multiply( q, padRight(b, q.count) ) ).result
+        // subtract.left.count == a.count * 2
+        // subtract.right.count == multiply.count == q.count * 2 == a.count * 2
+        // subtract.result.count == a.count * 2
+
+
     // return (q, r)
-    return (q, r)
+        // now we must truncate both q and r to satisfy the guarantees.
+    return (truncateRight(q, b.count), truncateRight(r, b.count))
+        // result.q.count == b.count
+        // result.r.count == b.count
 }

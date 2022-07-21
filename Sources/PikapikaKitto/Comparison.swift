@@ -7,6 +7,9 @@
 
 import Foundation
 
+let EQUAL: Int = 0
+let LESS_THAN: Int = -1
+let GREATER_THAN: Int = 1
 
 /// Compares two multi-digit numbers
 ///
@@ -15,18 +18,14 @@ import Foundation
 ///   - a.count == b.count
 /// - **Guarantees**:
 ///   - if `a == b` then returns 0
-///   - if `a < b` then returns `Digit.max` (equivalent to -1 in 2's complement)
+///   - if `a < b` then returns -1
 ///   - if `a > b` then returns 1
 ///
 /// - Parameters:
 ///   - a: number on the left-hand side
 ///   - b: number on the right-hand side
 /// - Returns: `0` if numbers are equal, Digit.max if `a` less than `b`, and `1` if `a` greater than `b`
-func compare<Digit>(_ a: [Digit], _ b: [Digit]) -> Digit where Digit: FixedWidthInteger & UnsignedInteger {
-    let EQUAL: Digit = 0
-    let LESS_THAN: Digit = Digit.max
-    let GREATER_THAN: Digit = 1
-
+func compare<Digit>(_ a: [Digit], _ b: [Digit]) -> Int where Digit: FixedWidthInteger & UnsignedInteger {
     // going from highest to lowest significant digit
     for i in (0..<a.count).reversed() {
         if a[i] == b[i] {
