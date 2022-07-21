@@ -1675,7 +1675,7 @@ class ArithmeticTests: XCTestCase {
         print("]")
     }
 
-    func test_shiftRight() {
+    func test_digitShiftLeft() {
         let table: [(a: [Digit], n: Int, result: [Digit])] = [
             (a: [0, 0], n: 1, result: [0, 0]),
             (a: [1, 0], n: 1, result: [0, 1]),
@@ -1753,12 +1753,12 @@ class ArithmeticTests: XCTestCase {
         ]
 
         for row in table {
-            let result = shiftRight(row.a, row.n)
+            let result = digitShiftLeft(row.a, row.n)
             XCTAssertEqual(result, row.result, "\(row.a), \(row.n)")
         }
     }
 
-    func util_generateTable_shiftRight() {
+    func util_generateTable_digitShiftLeft() {
         // Specify range of tested variables
 
         // A: a.count = { 2, 3, 7, 8 }
@@ -1789,7 +1789,7 @@ class ArithmeticTests: XCTestCase {
                     var a = [Digit](repeating: 0, count: aCount)
                     a[0..<i] = ArraySlice( (0..<i).map { Digit($0) + 1 } )
 
-                    let result = shiftRight(a, n)
+                    let result = digitShiftLeft(a, n)
 
                     print("(a: \(a), n: \(n), result: \(result)),")
                 }
@@ -1799,7 +1799,7 @@ class ArithmeticTests: XCTestCase {
         }
     }
 
-    func test_padRight() {
+    func test_padLeft() {
         let table: [(a: [Digit], size: Int, result: [Digit])] = [
             (a: [], size: -1, result: []),
             (a: [], size: 0, result: []),
@@ -1834,12 +1834,12 @@ class ArithmeticTests: XCTestCase {
         ]
 
         for row in table {
-            let result = padRight(row.a, row.size)
+            let result = padLeft(row.a, row.size)
             XCTAssertEqual(result, row.result, "\(row.a), \(row.size)")
         }
     }
 
-    func util_generateTable_padRight() {
+    func util_generateTable_padLeft() {
         // NOTE: double check the result manually
 
         let A = [0, 1, 7, 10, 11]
@@ -1853,7 +1853,7 @@ class ArithmeticTests: XCTestCase {
                 var a = [Digit](repeating: 0, count: aCount)
                 a[0..<aCount] = ArraySlice( (0..<aCount).map { Digit($0) } )
 
-                let result = padRight(a, size)
+                let result = padLeft(a, size)
 
                 print("(a: \(a), size: \(size), result: \(result)),")
             }

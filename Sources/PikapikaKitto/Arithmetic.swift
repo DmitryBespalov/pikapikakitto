@@ -298,8 +298,8 @@ func multiplyByScalar<Digit>(_ a: Digit, _ b: [Digit]) -> [Digit] where Digit: U
         // product of the a and b
 }
 
-/// Shifts the digits of a number by `N` positions to the right, i.e multiplying the number by base^N and truncating
-/// at the size of the number.
+/// Shifts the digits of a number by `N` positions to the left, from least significant to more significant.
+/// It will multiply the number by base^N and truncate at the size of the number.
 ///
 /// - **Requires**:
 ///   - `a`: multiple-digit base-Digit number, 0-index is the lowest significant digit.
@@ -313,7 +313,7 @@ func multiplyByScalar<Digit>(_ a: Digit, _ b: [Digit]) -> [Digit] where Digit: U
 ///   - a: number to shift
 ///   - n: how much to shift
 /// - Returns: resulting number
-func shiftRight<Digit>(_ a: [Digit], _ n: Int) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
+func digitShiftLeft<Digit>(_ a: [Digit], _ n: Int) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
     var result = a
         // result.count == a.count
     result[0..<n] = ArraySlice(repeating: 0, count: n)
@@ -337,7 +337,7 @@ func shiftRight<Digit>(_ a: [Digit], _ n: Int) -> [Digit] where Digit: UnsignedI
 ///   - a: number to pad
 ///   - size: new size
 /// - Returns: padded number
-func padRight<Digit>(_ a: [Digit], _ size: Int) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
+func padLeft<Digit>(_ a: [Digit], _ size: Int) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
     guard size > a.count else {
         return a
             // result == a iff !(size > a.count)
@@ -364,7 +364,7 @@ func padRight<Digit>(_ a: [Digit], _ size: Int) -> [Digit] where Digit: Unsigned
 ///   - a: multilple-digit number
 ///   - size: size to which to truncate
 /// - Returns: truncated result.
-func truncateRight<Digit>(_ a: [Digit], _ size: Int) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
+func truncateLeft<Digit>(_ a: [Digit], _ size: Int) -> [Digit] where Digit: UnsignedInteger & FixedWidthInteger {
     Array(a[0..<size])
 }
 
@@ -432,7 +432,7 @@ func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: Unsigne
 
 
         // extend the result to be double-digit size, so that resulting product sum can be performed.
-        let m = padRight(l, p.count)
+        let m = padLeft(l, p.count)
             // l is a multi-digit number AND
             // l.count == b.count + 1 AND
             // p.count == a.count * 2 AND
@@ -444,7 +444,7 @@ func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: Unsigne
         // multiply by the base raised to the exponent for the coefficient, i.e. the "i" is the exponent
         // that is equivalent to "shifting" the number to the right for "i" positions.
         // we will never lose the numbers because the width is double-digit
-        let r = shiftRight(m, i)
+        let r = digitShiftLeft(m, i)
             // m is a multiple-digit number
             // i < m.count
                 // true because max(i) == a.count - 1 and m.count == p.count == a.count * 2
@@ -490,8 +490,8 @@ func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: Unsigne
 func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where Digit: UnsignedInteger & FixedWidthInteger {
 
     // if b == 1 then q = a and r = 0
-    if numbersEqual( b, padRight( [Digit(1)], b.count ) ) {
-        let q = truncateRight(a, b.count)
+    if numbersEqual( b, padLeft( [Digit(1)], b.count ) ) {
+        let q = truncateLeft(a, b.count)
             // q.count == a.count
         let r = [Digit](repeating: 0, count: b.count)
             // r.count == b.count, r[i] == 0
@@ -505,19 +505,19 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
     }
     // else b != 0
 
-    let aComparedB = compare( a, padRight(b, a.count) )
+    let aComparedB = compare( a, padLeft(b, a.count) )
     if aComparedB == LESS_THAN {
         // if a < b then quotient a / b = 0 and a is a remainder r
 
         let q = [Digit](repeating: 0, count: b.count)
             // q.count == b.count, q[i] == 0
-        let r = truncateRight(a, b.count)
+        let r = truncateLeft(a, b.count)
             // r.count == b.count
         return (q, r)
     } else if aComparedB == EQUAL {
         // if a == b, then quotient q = a / b == 1 and remainder r == 0
 
-        let q = padRight([Digit(1)], b.count)
+        let q = padLeft([Digit(1)], b.count)
             // q.count == b.count, q[0] == 1, q[1..<b.count] == 0
         let r = [Digit](repeating: 0, count: b.count)
             // r.count == b.count, r[i] == 0
@@ -551,7 +551,7 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
         // so, n > 0 and at least 1.
 
 
-    let one = padRight( [ Digit(1) ], a.count )
+    let one = padLeft( [ Digit(1) ], a.count )
         // one is a number with least significant digit equal to 1, others are 0 digits. OK.
 
     // u = (a >> n) + 1  = a/2^n + 1
@@ -625,7 +625,7 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
 
         // sm = compare(a, mb)
             // get sign of (a - mb), or sign of a remainder when q = m
-        let sm = compare( padRight( a, a.count * 2 ), multiply( m, padRight(b, m.count) ) )
+        let sm = compare( padLeft( a, a.count * 2 ), multiply( m, padLeft(b, m.count) ) )
             // note, that we have to pad everything to 2*a.count because multiplying m by b would be double-width number.
             // requirements:
                 // compare.left.count == a.count * 2
@@ -636,7 +636,7 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
         // sl = compare(a, lb)
             // get sign of (a - lb), or a remainder when q = l
             // step0: sl = +1 (see (i).)
-        let sl = compare( padRight(a, a.count * 2), multiply( l, padRight(b, l.count) ) )
+        let sl = compare( padLeft(a, a.count * 2), multiply( l, padLeft(b, l.count) ) )
             // compare.left.count == a.count * 2
             // compare.right.count == l.count * 2 == a.count * 2
             // compare will have both numbers compared.
@@ -644,7 +644,7 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
         // su = compare(a, ub)
             // get sign of a remainder when q = u
             // step 0: su = -1 (see (ii).)
-        let su = compare( padRight(a, a.count * 2), multiply( u, padRight(b, u.count) ) )
+        let su = compare( padLeft(a, a.count * 2), multiply( u, padLeft(b, u.count) ) )
             // compare.left.count == a.count * 2
             // compare.right.count == u.count * 2 == a.count * 2
 
@@ -692,7 +692,7 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
 
     // q is found, now find remainder
     // r = a - bq
-    let r = subtract( padRight(a, a.count * 2), multiply( q, padRight(b, q.count) ) ).result
+    let r = subtract( padLeft(a, a.count * 2), multiply( q, padLeft(b, q.count) ) ).result
         // subtract.left.count == a.count * 2
         // subtract.right.count == multiply.count == q.count * 2 == a.count * 2
         // subtract.result.count == a.count * 2
@@ -700,7 +700,7 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
 
     // return (q, r)
         // now we must truncate both q and r to satisfy the guarantees.
-    return (truncateRight(q, b.count), truncateRight(r, b.count))
+    return (truncateLeft(q, b.count), truncateLeft(r, b.count))
         // result.q.count == b.count
         // result.r.count == b.count
 }
