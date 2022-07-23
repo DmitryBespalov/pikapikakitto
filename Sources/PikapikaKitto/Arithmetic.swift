@@ -477,8 +477,8 @@ func multiply<Digit>(_ a: [Digit], _ b: [Digit]) -> [Digit] where Digit: Unsigne
 ///  - `a, b`: multiple-digit numbers
 ///  - `a.count == b.count * 2`
 ///  - `a.count % 2 == 0` (a.count is even)
-///  - `b != 0`
 /// - **Guarantees**:
+///  - if `b == 0` then `q = max number, r = max number`
 ///  - `result.q.count == result.r.count == b.count == a.count / 2`
 ///  - `result.q` is an integer quotient of a division a / b
 ///  - `result.r` is an integer remainder of a division a / b
@@ -499,9 +499,11 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
     }
     // else b != 1
 
+    // if b == 0 then q = r = 2^b.count - 1
     if numbersEqual( b, [Digit](repeating: 0, count: b.count) ) {
-        preconditionFailure("Division by zero")
-            // will stop the program
+        let q = [Digit](repeating: .max, count: b.count)
+        let r = [Digit](repeating: .max, count: b.count)
+        return (q, r)
     }
     // else b != 0
 
@@ -532,7 +534,7 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
         // in other words, we'll find the integer interval where the quotient lies.
         //
         // we will do that by estimating where the actual quotient lies initially, based on
-        // the value of a divided by a power of 2. See below.
+        // the value of `a` divided by a power of 2. See below.
 
         // n = floor(ln b)
         // n is the exponent of the nearest power of 2 that is less than or equal to b
@@ -552,7 +554,7 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
 
 
     let one = padLeft( [ Digit(1) ], a.count )
-        // one is a number with least significant digit equal to 1, others are 0 digits. OK.
+        // `one` is a number with least significant digit equal to 1, others are 0 digits.
 
     // u = (a >> n) + 1  = a/2^n + 1
         // (i). what is su, a sign of (a - ub) = a - b(a/2^n + 1))?
@@ -606,16 +608,15 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
     // and the loop below should stop. If bounds differ by 0, then the same, we found the quotient.
     // Until that time we will reduce bounds such that the quotient still lies between them.
 
-
     // while u - l > 1
     while compare( subtract(u, l).result, one ) == GREATER_THAN {
         // loop invariant: (i): a - ub < 0 and (ii): a - lb > 0 and u - l > 1
         // step 0: u - l > 1 => u > l + 1
 
-        // m = u >> 1 + l >> 1 = u/2 + l/2 = floor( (u + l) / 2) )
-            // since m is in the middle of the interval, and u - l > 1,
-            // then l < m < u
-        let m = sum( bitShiftRight(u, 1), bitShiftRight(l, 1) ).result
+        // m = (u + l) / 2 = l + (u - l) / 2 = l + (u - l) >> 1
+            // this will not overflow, because m is between u and l
+        let m = sum(l, bitShiftRight(subtract(u, l).result, 1)).result
+
             // can both of them go to zero as a result of shift?
                 // then they have to be equal to 1 both, meaning u == l, which is not possible here.
             // bitShiftRight(u, 1).count == u.count
@@ -696,7 +697,6 @@ func divide<Digit>(_ a: [Digit], _ b: [Digit]) -> (q: [Digit], r: [Digit]) where
         // subtract.left.count == a.count * 2
         // subtract.right.count == multiply.count == q.count * 2 == a.count * 2
         // subtract.result.count == a.count * 2
-
 
     // return (q, r)
         // now we must truncate both q and r to satisfy the guarantees.
