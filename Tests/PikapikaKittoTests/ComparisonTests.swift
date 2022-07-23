@@ -12,7 +12,7 @@ class ComparisonTests: XCTestCase {
     typealias Digit = UInt8
 
     func test_compare() {
-        util_generateTable_compare()
+        // util_generateTable_compare()
 
         let table: [(a: [Digit], b: [Digit], result: Int)] = [
             (a: [0, 0], b: [0, 0], result: EQUAL),

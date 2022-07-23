@@ -296,7 +296,7 @@ class BitwiseOperationsTests: XCTestCase {
     }
 
     func test_printDigit() {
-        print(util_printDigit(UInt8.max - 1))
+        XCTAssertEqual(util_printDigit(UInt8.max - 1), "0b1111_1110")
         XCTAssertEqual(UInt8.max - 1, 0b1111_1110)
     }
 
